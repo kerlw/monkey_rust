@@ -76,4 +76,8 @@ impl Token {
             typ: TokenType::Float(input),
         }
     }
+
+    pub fn is_eof(&self) -> bool {
+        self.typ == TokenType::EOF
+    }
 }
