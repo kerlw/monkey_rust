@@ -1,5 +1,5 @@
 #[warn(non_camel_case_types)]
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum TokenType {
     Illegal,
     EOF,
@@ -39,10 +39,14 @@ pub enum TokenType {
     Float(f64),
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub struct Token {
     pub(crate) typ: TokenType,
 }
+
+pub const EOF_TOKEN: Token = Token {
+    typ: TokenType::EOF,
+};
 
 impl Token {
     pub fn new(typ: TokenType) -> Token {
@@ -79,5 +83,12 @@ impl Token {
 
     pub fn is_eof(&self) -> bool {
         self.typ == TokenType::EOF
+    }
+
+    pub fn is_operator(&self) -> bool {
+        match self.typ {
+            TokenType::Plus | TokenType::Minus | TokenType::Asterisk | TokenType::Slash => true,
+            _ => false,
+        }
     }
 }

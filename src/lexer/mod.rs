@@ -1,5 +1,5 @@
 pub mod token;
 pub mod lexer;
 
-#[test]
+#[cfg(test)]
 mod test;
