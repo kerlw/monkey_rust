@@ -1,7 +1,6 @@
 use crate::lexer::lexer::Lexer;
 use crate::lexer::token::{Token, EOF_TOKEN};
-use crate::parser::program::{Expression, Ident, Program, Statement};
-use std::borrow::Borrow;
+use crate::parser::program::{Expression, Ident, Precedence, Program, Statement};
 use std::fmt::{Debug, Display, Formatter};
 
 mod program;
@@ -77,12 +76,15 @@ impl Parser {
     pub fn parse_program(&mut self) -> Result<Program> {
         let mut ret = Program::default();
         loop {
+            // println!("[parse loop] current token is {:?}", self.cur_token);
             if self.cur_token.is_eof() {
                 break;
             }
 
             let statement = self.parse_statement()?;
             ret.statements.push(statement);
+
+            self.next_token();
         }
         Ok(ret)
     }
@@ -107,7 +109,7 @@ impl Parser {
 
         self.next_token();
 
-        let value = self.parse_expression()?;
+        let value = self.parse_expression(Precedence::Lowest)?;
         Ok(Statement::LetStatement(identifier, value))
     }
 
@@ -124,10 +126,12 @@ impl Parser {
     }
 
     fn parse_expression_statement(&mut self) -> Result<Statement> {
+        let ret = self.parse_expression(Precedence::Lowest)?;
         if self.peek_token == Token::Semicolon {
             self.next_token();
         }
-        unimplemented!()
+
+        Ok(Statement::ExpressionStatement(ret))
     }
 
     fn parse_identifier(&mut self) -> Result<Ident> {
@@ -137,28 +141,74 @@ impl Parser {
         }
     }
 
-    fn parse_expression(&mut self) -> Result<Expression> {
-        let expr = match &self.cur_token {
-            Token::Ident(s) => {
+    fn parse_expression(&mut self, precedence: Precedence) -> Result<Expression> {
+        let mut left = match &self.cur_token {
+            Token::Ident(_) => {
                 let ident = self.parse_identifier()?;
                 Ok(Expression::Identifier(ident))
             }
-            Token::Int(v) => {
-                if self.peek_token.is_operator() {
-                    return self.parse_operator_expression();
-                } else if self.expect_peek(Token::Semicolon) {
-                }
-                Err("".into())
+            Token::Int(_) => self.parse_int_literal(),
+            Token::Bang | Token::Minus => self.parse_prefix_expression(),
+            _ => Err(format!("no prefix parse function for {:?}", self.cur_token)
+                .as_str()
+                .into()),
+        }?;
+
+        loop {
+            if self.expect_peek(Token::Semicolon)
+                || precedence >= Precedence::from_token(&self.peek_token)
+            {
+                break;
             }
-            _ => Err("".into()),
-        };
-        if expr.is_ok() {
+
             self.next_token();
+            let is_infix = match self.cur_token {
+                Token::Eq
+                | Token::NotEq
+                | Token::LT
+                | Token::GT
+                | Token::Plus
+                | Token::Minus
+                | Token::Slash
+                | Token::Asterisk => true,
+                _ => false,
+            };
+
+            if is_infix {
+                left = self.parse_infix_expression(left)?;
+            } else {
+                return Ok(left);
+            }
         }
-        expr
+
+        Ok(left)
     }
 
-    fn parse_operator_expression(&mut self) -> Result<Expression> {
-        Err("".into())
+    fn parse_int_literal(&self) -> Result<Expression> {
+        if let Token::Int(v) = self.cur_token {
+            Ok(Expression::IntLiteral(v))
+        } else {
+            Err("Token::Int not found".into())
+        }
+    }
+
+    fn parse_prefix_expression(&mut self) -> Result<Expression> {
+        let token = self.cur_token.clone();
+        self.next_token();
+
+        let right = self.parse_expression(Precedence::Prefix)?;
+        Ok(Expression::PrefixExpression(token, Box::new(right)))
+    }
+
+    fn parse_infix_expression(&mut self, left: Expression) -> Result<Expression> {
+        let precedence = Precedence::from_token(&self.cur_token);
+        let token = self.cur_token.clone();
+        self.next_token();
+        let right = self.parse_expression(precedence)?;
+        Ok(Expression::InfixExpression(
+            Box::new(left),
+            token,
+            Box::new(right),
+        ))
     }
 }
