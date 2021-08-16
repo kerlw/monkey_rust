@@ -1,4 +1,4 @@
-use crate::lexer::token::{Token, TokenType};
+use crate::lexer::token::Token;
 use std::any::Any;
 
 pub trait Node {
@@ -19,7 +19,7 @@ pub struct Identifier {
 
 impl Node for Identifier {
     fn token_literal(&self) -> String {
-        return if let TokenType::Ident(v) = &self.token.typ {
+        return if let Token::Ident(v) = &self.token {
             v.clone()
         } else {
             "".to_string()

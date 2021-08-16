@@ -1,6 +1,6 @@
 #[warn(non_camel_case_types)]
 #[derive(Debug, PartialEq, Clone)]
-pub enum TokenType {
+pub enum Token {
     Illegal,
     EOF,
 
@@ -39,55 +39,38 @@ pub enum TokenType {
     Float(f64),
 }
 
-#[derive(Debug, PartialEq, Clone)]
-pub struct Token {
-    pub(crate) typ: TokenType,
-}
-
-pub const EOF_TOKEN: Token = Token {
-    typ: TokenType::EOF,
-};
+pub const EOF_TOKEN: Token = Token::EOF;
 
 impl Token {
-    pub fn new(typ: TokenType) -> Token {
-        Token { typ }
-    }
-
     pub fn from_str<T: Into<String>>(input: T) -> Token {
         let input = input.into();
         match input.as_str() {
-            "fn" => Token::new(TokenType::Function),
-            "let" => Token::new(TokenType::Let),
-            "true" => Token::new(TokenType::True),
-            "false" => Token::new(TokenType::False),
-            "if" => Token::new(TokenType::If),
-            "else" => Token::new(TokenType::Else),
-            "return" => Token::new(TokenType::Return),
-            _ => Token {
-                typ: TokenType::Ident(input),
-            },
+            "fn" => Token::Function,
+            "let" => Token::Let,
+            "true" => Token::True,
+            "false" => Token::False,
+            "if" => Token::If,
+            "else" => Token::Else,
+            "return" => Token::Return,
+            _ => Token::Ident(input),
         }
     }
 
     pub fn from_int(input: i64) -> Token {
-        Token {
-            typ: TokenType::Int(input),
-        }
+        Token::Int(input)
     }
 
     pub fn from_float(input: f64) -> Token {
-        Token {
-            typ: TokenType::Float(input),
-        }
+        Token::Float(input)
     }
 
     pub fn is_eof(&self) -> bool {
-        self.typ == TokenType::EOF
+        *self == Token::EOF
     }
 
     pub fn is_operator(&self) -> bool {
-        match self.typ {
-            TokenType::Plus | TokenType::Minus | TokenType::Asterisk | TokenType::Slash => true,
+        match self {
+            Token::Plus | Token::Minus | Token::Asterisk | Token::Slash => true,
             _ => false,
         }
     }

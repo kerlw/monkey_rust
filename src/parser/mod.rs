@@ -1,5 +1,5 @@
 use crate::lexer::lexer::Lexer;
-use crate::lexer::token::{Token, TokenType, EOF_TOKEN};
+use crate::lexer::token::{Token, EOF_TOKEN};
 use crate::parser::program::{Expression, Identifier, LetStatement, Program, Statement};
 use std::borrow::Borrow;
 use std::fmt::{Debug, Display, Formatter};
@@ -58,8 +58,8 @@ impl Parser {
         self.peek_token = self.l.next_token();
     }
 
-    pub fn expect_peek(&mut self, token: TokenType) -> bool {
-        if self.peek_token.typ == token {
+    pub fn expect_peek(&mut self, token: Token) -> bool {
+        if self.peek_token == token {
             self.next_token();
             true
         } else {
@@ -88,8 +88,8 @@ impl Parser {
     }
 
     fn parse_statement(&mut self) -> Result<Box<dyn Statement>> {
-        match self.cur_token.typ {
-            TokenType::Let => self.parse_let_statement(),
+        match self.cur_token {
+            Token::Let => self.parse_let_statement(),
             _ => Err("no equal sign!".into()),
         }
     }
@@ -98,7 +98,7 @@ impl Parser {
         let token = self.cur_token.clone();
         let identifier = self.parse_identifier()?;
 
-        if !self.expect_peek(TokenType::Assign) {
+        if !self.expect_peek(Token::Assign) {
             return Err("no equal sign!".into());
         }
 
@@ -109,7 +109,7 @@ impl Parser {
     }
 
     fn parse_identifier(&mut self) -> Result<Identifier> {
-        if let TokenType::Ident(v) = self.peek_token.typ.borrow() {
+        if let Token::Ident(v) = self.peek_token.borrow() {
             self.next_token();
             let ident = Identifier {
                 token: self.cur_token.clone(),
@@ -121,12 +121,11 @@ impl Parser {
     }
 
     fn parse_expression(&mut self) -> Result<Box<dyn Expression>> {
-        match self.cur_token.typ {
-            TokenType::Int(v) => {
+        match self.cur_token {
+            Token::Int(v) => {
                 if self.peek_token.is_operator() {
                     return self.parse_operator_expression();
-                } else if self.expect_peek(TokenType::Semicolon) {
-
+                } else if self.expect_peek(Token::Semicolon) {
                 }
                 Err("".into())
             }

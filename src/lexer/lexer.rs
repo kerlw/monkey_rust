@@ -1,4 +1,4 @@
-use crate::lexer::token::{Token, TokenType};
+use crate::lexer::token::Token;
 
 pub struct Lexer {
     input: String,
@@ -43,35 +43,35 @@ impl Lexer {
             b'=' => {
                 if self.peek_char() == b'=' {
                     self.read_char();
-                    Token::new(TokenType::Eq)
+                    Token::Eq
                 } else {
-                    Token::new(TokenType::Assign)
+                    Token::Assign
                 }
             }
-            b'+' => Token::new(TokenType::Plus),
-            b'-' => Token::new(TokenType::Minus),
+            b'+' => Token::Plus,
+            b'-' => Token::Minus,
             b'!' => {
                 if self.peek_char() == b'=' {
                     self.read_char();
-                    Token::new(TokenType::NotEq)
+                    Token::NotEq
                 } else {
-                    Token::new(TokenType::Bang)
+                    Token::Bang
                 }
             }
-            b'*' => Token::new(TokenType::Asterisk),
-            b'/' => Token::new(TokenType::Slash),
-            b'<' => Token::new(TokenType::LT),
-            b'>' => Token::new(TokenType::GT),
-            b',' => Token::new(TokenType::Comma),
-            b';' => Token::new(TokenType::Semicolon),
+            b'*' => Token::Asterisk,
+            b'/' => Token::Slash,
+            b'<' => Token::LT,
+            b'>' => Token::GT,
+            b',' => Token::Comma,
+            b';' => Token::Semicolon,
 
-            b'(' => Token::new(TokenType::LParen),
-            b')' => Token::new(TokenType::RParen),
-            b'[' => Token::new(TokenType::LBracket),
-            b']' => Token::new(TokenType::RBracket),
-            b'{' => Token::new(TokenType::LBrace),
-            b'}' => Token::new(TokenType::RBrace),
-            0 => Token::new(TokenType::EOF),
+            b'(' => Token::LParen,
+            b')' => Token::RParen,
+            b'[' => Token::LBracket,
+            b']' => Token::RBracket,
+            b'{' => Token::LBrace,
+            b'}' => Token::RBrace,
+            0 => Token::EOF,
             _ => {
                 let ch = self.ch as char;
 
@@ -81,7 +81,7 @@ impl Lexer {
                 } else if ch.is_numeric() {
                     return self.read_number_token();
                 } else {
-                    Token::new(TokenType::Illegal)
+                    Token::Illegal
                 }
             }
         };
