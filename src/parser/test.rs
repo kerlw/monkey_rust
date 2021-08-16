@@ -1,14 +1,13 @@
 use crate::lexer::lexer::Lexer;
-use crate::parser::program::{LetStatement, Statement, Node};
+use crate::parser::program::Statement;
 use crate::parser::Parser;
 
 #[cfg(test)]
-fn check_let_statement(st: &dyn Statement, name: &str) -> bool {
-    match st.as_any().downcast_ref::<LetStatement>() {
-        Some(statement) => {
-            statement.name.token_literal().eq(name)
-        },
-        None => false,
+fn check_let_statement(st: &Statement, name_expect: &str) -> bool {
+    if let Statement::LetStatement(name, _) = st {
+        name_expect.eq(&name.0)
+    } else {
+        false
     }
 }
 
@@ -27,6 +26,6 @@ fn test_let_statements() {
 
     assert_eq!(program.statements.len(), 3);
     for (pos, st) in program.statements.iter().enumerate() {
-        assert!(check_let_statement(st.as_ref(), names[pos]));
+        assert!(check_let_statement(st, names[pos]));
     }
 }

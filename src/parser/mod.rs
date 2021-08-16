@@ -1,6 +1,6 @@
 use crate::lexer::lexer::Lexer;
 use crate::lexer::token::{Token, EOF_TOKEN};
-use crate::parser::program::{Expression, Identifier, LetStatement, Program, Statement};
+use crate::parser::program::{Expression, Ident, Program, Statement};
 use std::borrow::Borrow;
 use std::fmt::{Debug, Display, Formatter};
 
@@ -87,41 +87,62 @@ impl Parser {
         Ok(ret)
     }
 
-    fn parse_statement(&mut self) -> Result<Box<dyn Statement>> {
+    fn parse_statement(&mut self) -> Result<Statement> {
         match self.cur_token {
             Token::Let => self.parse_let_statement(),
-            _ => Err("no equal sign!".into()),
+            Token::Return => self.parse_return_statement(),
+            _ => self.parse_expression_statement(),
         }
     }
 
-    fn parse_let_statement(&mut self) -> Result<Box<dyn Statement>> {
-        let token = self.cur_token.clone();
+    fn parse_let_statement(&mut self) -> Result<Statement> {
+        if let Token::Ident(_) = &self.peek_token {
+            self.next_token();
+        }
         let identifier = self.parse_identifier()?;
 
         if !self.expect_peek(Token::Assign) {
             return Err("no equal sign!".into());
         }
 
-        let value = self.parse_expression()?;
+        self.next_token();
 
-        let st = LetStatement::new(token, identifier, value);
-        Ok(Box::new(st))
+        let value = self.parse_expression()?;
+        Ok(Statement::LetStatement(identifier, value))
     }
 
-    fn parse_identifier(&mut self) -> Result<Identifier> {
-        if let Token::Ident(v) = self.peek_token.borrow() {
+    fn parse_return_statement(&mut self) -> Result<Statement> {
+        self.next_token();
+
+        loop {
+            if self.cur_token == Token::Semicolon {
+                break;
+            }
             self.next_token();
-            let ident = Identifier {
-                token: self.cur_token.clone(),
-            };
-            Ok(ident)
-        } else {
-            return Err("not a ident token".into());
+        }
+        todo!()
+    }
+
+    fn parse_expression_statement(&mut self) -> Result<Statement> {
+        if self.peek_token == Token::Semicolon {
+            self.next_token();
+        }
+        unimplemented!()
+    }
+
+    fn parse_identifier(&mut self) -> Result<Ident> {
+        match &self.cur_token {
+            Token::Ident(v) => Ok(Ident(v.clone())),
+            _ => Err("not a ident token".into()),
         }
     }
 
-    fn parse_expression(&mut self) -> Result<Box<dyn Expression>> {
-        match self.cur_token {
+    fn parse_expression(&mut self) -> Result<Expression> {
+        let expr = match &self.cur_token {
+            Token::Ident(s) => {
+                let ident = self.parse_identifier()?;
+                Ok(Expression::Identifier(ident))
+            }
             Token::Int(v) => {
                 if self.peek_token.is_operator() {
                     return self.parse_operator_expression();
@@ -130,10 +151,14 @@ impl Parser {
                 Err("".into())
             }
             _ => Err("".into()),
+        };
+        if expr.is_ok() {
+            self.next_token();
         }
+        expr
     }
 
-    fn parse_operator_expression(&mut self) -> Result<Box<dyn Expression>> {
+    fn parse_operator_expression(&mut self) -> Result<Expression> {
         Err("".into())
     }
 }
