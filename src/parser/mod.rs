@@ -204,7 +204,11 @@ impl Parser {
         let precedence = Precedence::from_token(&self.cur_token);
         let token = self.cur_token.clone();
         self.next_token();
-        let right = self.parse_expression(precedence)?;
+
+        let right = match &token {
+            Token::Plus => self.parse_expression(precedence.sub(1))?,
+            _ => self.parse_expression(precedence)?,
+        };
         Ok(Expression::InfixExpression(
             Box::new(left),
             token,
