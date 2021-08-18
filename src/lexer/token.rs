@@ -7,8 +7,6 @@ pub enum Token {
     // keywords
     Let,      // let
     Function, // fn
-    True,     // true
-    False,    // false
     If,       // if
     Else,     //else
     Return,   //return
@@ -35,6 +33,7 @@ pub enum Token {
     RBrace,   // }
 
     Ident(String),
+    Bool(bool), // true/false
     Int(i64),
     Float(f64),
 }
@@ -47,8 +46,8 @@ impl Token {
         match input.as_str() {
             "fn" => Token::Function,
             "let" => Token::Let,
-            "true" => Token::True,
-            "false" => Token::False,
+            "true" => Token::Bool(true),
+            "false" => Token::Bool(false),
             "if" => Token::If,
             "else" => Token::Else,
             "return" => Token::Return,

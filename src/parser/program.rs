@@ -10,13 +10,20 @@ pub enum Statement {
     ExpressionStatement(Expression),
 }
 
+// TODO 这个结构可能是多余的定义，也许可以直接使用Vec<Statement>代替，后面再确认
+#[derive(PartialEq, Debug, Clone, Eq)]
+pub struct BlockStatement {
+    statements: Vec<Statement>,
+}
+
 #[derive(PartialEq, Debug, Clone)]
 pub enum Expression {
     Identifier(Ident),
-    IfExpression,
+    IfExpression(Box<Expression>, Vec<Statement>, Vec<Statement>),
     CallExpression,
     FunctionExpression,
     IntLiteral(i64),
+    BoolLiteral(bool),
     PrefixExpression(Token, Box<Expression>),
     InfixExpression(Box<Expression>, Token, Box<Expression>),
 }
@@ -66,13 +73,13 @@ impl Precedence {
     #[inline]
     pub fn from_i32(v: i32) -> Self {
         match v {
-            _ => Precedence::Lowest,
             1 => Precedence::Equals,
             2 => Precedence::LessGreater,
             3 => Precedence::Sum,
             4 => Precedence::Product,
             5 => Precedence::Prefix,
             6 => Precedence::Call,
+            _ => Precedence::Lowest,
         }
     }
 

@@ -1,7 +1,7 @@
 use crate::lexer::lexer::Lexer;
-use crate::parser::program::Statement;
+use crate::lexer::token::Token;
+use crate::parser::program::{Expression, Statement};
 use crate::parser::Parser;
-use std::borrow::Borrow;
 
 #[cfg(test)]
 fn check_let_statement(st: &Statement, name_expect: &str) -> bool {
@@ -40,5 +40,28 @@ fn test_infix_expression() {
     let program = p.parse_program().unwrap();
 
     assert_eq!(program.statements.len(), 1);
-    println!("{:?}", program.statements[0]);
+    assert_eq!(
+        program.statements[0],
+        Statement::ExpressionStatement(Expression::InfixExpression(
+            Box::new(Expression::IntLiteral(4)),
+            Token::Plus,
+            Box::new(Expression::InfixExpression(
+                Box::new(Expression::IntLiteral(5)),
+                Token::Plus,
+                Box::new(Expression::IntLiteral(10))
+            ))
+        ))
+    );
 }
+
+#[test]
+fn test_if_else_expression() {
+    let input = "if (x < y) { x } else { y }";
+
+    let l = Lexer::new(input);
+    let mut p = Parser::new(l);
+    let program = p.parse_program().unwrap();
+
+    assert_eq!(program.statements.len(), 1);
+}
+

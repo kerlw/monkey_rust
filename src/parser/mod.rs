@@ -148,7 +148,10 @@ impl Parser {
                 Ok(Expression::Identifier(ident))
             }
             Token::Int(_) => self.parse_int_literal(),
+            Token::Bool(_) => self.parse_bool_literal(),
             Token::Bang | Token::Minus => self.parse_prefix_expression(),
+            Token::LParen => self.parse_grouped_expression(),
+            Token::If => self.parse_if_expression(),
             _ => Err(format!("no prefix parse function for {:?}", self.cur_token)
                 .as_str()
                 .into()),
@@ -192,6 +195,14 @@ impl Parser {
         }
     }
 
+    fn parse_bool_literal(&self) -> Result<Expression> {
+        if let Token::Bool(v) = self.cur_token {
+            Ok(Expression::BoolLiteral(v))
+        } else {
+            Err("Token::Bool not found".into())
+        }
+    }
+
     fn parse_prefix_expression(&mut self) -> Result<Expression> {
         let token = self.cur_token.clone();
         self.next_token();
@@ -214,5 +225,41 @@ impl Parser {
             token,
             Box::new(right),
         ))
+    }
+
+    fn parse_grouped_expression(&mut self) -> Result<Expression> {
+        self.next_token();
+
+        let exp = self.parse_expression(Precedence::Lowest)?;
+
+        if !self.expect_peek(Token::RParen) {
+            return Err("Right parentheses expected".into());
+        }
+
+        return Ok(exp);
+    }
+
+    fn parse_if_expression(&mut self) -> Result<Expression> {
+        if !self.expect_peek(Token::LParen) {
+            return Err("'(' expected after 'if'.".into());
+        }
+        self.next_token();
+        let condition = self.parse_expression(Precedence::Lowest)?;
+
+        if !self.expect_peek(Token::RParen) {
+            return Err("')' expected after if condition expression".into());
+        }
+
+        if !self.expect_peek(Token::LBrace) {
+            return Err("'{' expected for block.".into());
+        }
+
+        let consequence = self.parse_block_statement();
+        return Ok(Expression::IfExpression(Box::new(condition), vec![], vec![]));
+
+    }
+
+    fn parse_block_statement(&mut self) -> Result<Vec<Statement>> {
+        Ok(vec![])
     }
 }
