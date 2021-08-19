@@ -4,6 +4,7 @@ use crate::parser::program::{Expression, Ident, Precedence, Program, Statement};
 use std::fmt::{Debug, Display, Formatter};
 
 mod program;
+
 #[cfg(test)]
 mod test;
 
@@ -152,6 +153,7 @@ impl Parser {
             Token::Bang | Token::Minus => self.parse_prefix_expression(),
             Token::LParen => self.parse_grouped_expression(),
             Token::If => self.parse_if_expression(),
+            Token::Function => self.parse_function_literal(),
             _ => Err(format!("no prefix parse function for {:?}", self.cur_token)
                 .as_str()
                 .into()),
@@ -254,12 +256,73 @@ impl Parser {
             return Err("'{' expected for block.".into());
         }
 
-        let consequence = self.parse_block_statement();
-        return Ok(Expression::IfExpression(Box::new(condition), vec![], vec![]));
+        let consequence = self.parse_block_statement()?;
 
+        let alternative = match self.peek_token {
+            _ => vec![],
+        };
+        return Ok(Expression::IfExpression(
+            Box::new(condition),
+            consequence,
+            alternative,
+        ));
     }
 
     fn parse_block_statement(&mut self) -> Result<Vec<Statement>> {
-        Ok(vec![])
+        self.next_token();  // LBrace
+
+        let mut ret = vec![];
+        while self.cur_token != Token::RBrace {
+            let statement = self.parse_statement()?;
+            ret.push(statement);
+
+            self.next_token();
+        }
+        Ok(ret)
+    }
+
+    fn parse_function_literal(&mut self) -> Result<Expression> {
+        // TODO! 支持function名称
+        if !self.expect_peek(Token::LParen) {
+            return Err("'(' expected for function expression".into());
+        }
+
+        let params = self.parse_function_parameters()?;
+
+        if !self.expect_peek(Token::LBrace) {
+            return Err("'{' expected for function body.".into());
+        }
+
+        let sts = self.parse_block_statement()?;
+        Ok(Expression::FunctionExpression(params, sts))
+    }
+
+    fn parse_function_parameters(&mut self) -> Result<Vec<Ident>> {
+        let mut ret = vec![];
+        self.next_token();
+
+        // 没有参数的情况
+        if self.cur_token == Token::RParen {
+            return Ok(ret);
+        }
+
+        loop {
+            if let Token::Ident(v) = &self.cur_token {
+                ret.push(Ident(v.clone()));
+            }
+
+            if self.peek_token != Token::Comma {
+                break;
+            }
+
+            self.next_token(); // comma
+            self.next_token(); // next ident
+        }
+
+        if !self.expect_peek(Token::RParen) {
+            return Err("')' expected for function parameters expression.".into());
+        }
+
+        Ok(ret)
     }
 }

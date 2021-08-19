@@ -20,8 +20,8 @@ pub struct BlockStatement {
 pub enum Expression {
     Identifier(Ident),
     IfExpression(Box<Expression>, Vec<Statement>, Vec<Statement>),
-    CallExpression,
-    FunctionExpression,
+    CallExpression(Box<Expression>, Vec<Expression>),
+    FunctionExpression(Vec<Ident>, Vec<Statement>),
     IntLiteral(i64),
     BoolLiteral(bool),
     PrefixExpression(Token, Box<Expression>),
