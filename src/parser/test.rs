@@ -1,13 +1,37 @@
 use crate::lexer::lexer::Lexer;
 use crate::lexer::token::Token;
-use crate::parser::Parser;
 use crate::parser::program::{Expression, Statement};
+use crate::parser::Parser;
 
 #[cfg(test)]
 fn check_let_statement(st: &Statement, name_expect: &str) -> bool {
     if let Statement::LetStatement(name, _) = st {
         name_expect.eq(&name.0)
     } else {
+        false
+    }
+}
+
+#[cfg(test)]
+fn check_literal_expression() -> bool {
+    false
+}
+
+#[cfg(test)]
+fn check_infix_expression() -> bool {
+    false
+}
+
+#[cfg(test)]
+fn check_function_expression(st: &Statement, expects: &Vec<&str>) -> bool {
+    if let Statement::ExpressionStatement(Expression::FunctionExpression(params, _)) = st {
+        assert_eq!(expects.len(), params.len());
+        for (i, param) in params.iter().enumerate() {
+            assert_eq!(param.0, expects[i]);
+        }
+        true
+    } else {
+        eprintln!("FunctionExpression expected, but {:?} instead.", st);
         false
     }
 }
@@ -55,6 +79,39 @@ fn test_infix_expression() {
 }
 
 #[test]
+fn test_operator_precedence() {
+    let tests = vec![
+        ("-a * b", "((-a) * b)"),
+        ("!-a", "(!(-a))"),
+        ("a + b + c", "((a + b) + c)"),
+        ("a + b - c", "((a + b) - c)"),
+        ("a * b * c", "((a * b) * c)"),
+        ("a * b / c", "((a * b) / c)"),
+        ("a + b / c", "(a + (b / c))"),
+        ("a + b * c + d / e - f", "(((a + (b * c)) + (d / e)) - f)"),
+        ("3 + 4; -5 * 5", "(3 + 4)((-5) * 5)"),
+        ("5 > 4 == 3 < 4", "((5 > 4) == (3 < 4))"),
+        ("5 < 4 != 3 > 4", "((5 < 4) != (3 > 4))"),
+        (
+            "3 + 4 * 5 == 3 * 1 + 4 * 5",
+            "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+        ),
+        (
+            "3 + 4 * 5 == 3 * 1 + 4 * 5",
+            "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+        ),
+    ];
+
+    for (input, expect) in tests {
+        let l = Lexer::new(input);
+        let mut p = Parser::new(l);
+        let program = p.parse_program().unwrap();
+
+        //TODO
+    }
+}
+
+#[test]
 fn test_if_else_expression() {
     let input = "if (x < y) { x } else { y }";
 
@@ -67,7 +124,7 @@ fn test_if_else_expression() {
 
 #[test]
 fn test_function_literal() {
-    let cases = [
+    let cases = vec![
         ("fn() {};", vec![]),
         ("fn(x) {};", vec!["x"]),
         ("fn(x, y, z) {};", vec!["x", "y", "z"]),
@@ -78,17 +135,17 @@ fn test_function_literal() {
         let mut p = Parser::new(l);
         let program = p.parse_program().unwrap();
 
-        assert_eq!(program.statements.len(), 1);
-        if let Statement::ExpressionStatement(
-            Expression::FunctionExpression(params, _)
-        ) = &program.statements[0] {
-            assert_eq!(expect.len(), params.len());
-            for (i, param) in expect.iter().enumerate() {
-                assert_eq!(*param, params[i].0);
-            }
-        } else {
-            println!("FunctionExpression expected, but {:?} instead.", program.statements[0]);
-            assert!(false);
-        }
+        assert!(check_function_expression(&program.statements[0], &expect));
     }
+}
+
+#[test]
+fn test_call_expression() {
+    let input = "add(1, 2 * 3, 4 + 5);";
+    let l = Lexer::new(input);
+    let mut p = Parser::new(l);
+    let program = p.parse_program().unwrap();
+
+    assert_eq!(program.statements.len(), 1);
+    println!("{:?}", program.statements[0]);
 }
