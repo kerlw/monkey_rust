@@ -1,12 +1,12 @@
 use crate::lexer::lexer::Lexer;
 use crate::lexer::token::Token;
-use crate::parser::program::{Expression, Statement};
+use crate::parser::program::{Expression, Statement, Ident};
 use crate::parser::Parser;
 
 #[cfg(test)]
-fn check_let_statement(st: &Statement, name_expect: &str) -> bool {
-    if let Statement::LetStatement(name, _) = st {
-        name_expect.eq(&name.0)
+fn check_let_statement(st: &Statement, name_expect: &str, value_expected: &Expression) -> bool {
+    if let Statement::LetStatement(name, v) = st {
+        name_expect.eq(&name.0) && v.eq(value_expected)
     } else {
         false
     }
@@ -42,16 +42,24 @@ fn test_let_statements() {
     let x = 5;
     let y = 10;
     let foobar = 838383;
+    let y = true;
+    let foobar = y;
     ";
-    let names = vec!["x", "y", "foobar"];
+    let name_values = vec![
+        ("x", Expression::IntLiteral(5)),
+        ("y", Expression::IntLiteral(10)),
+        ("foobar", Expression::IntLiteral(838383)),
+        ("y", Expression::BoolLiteral(true)),
+        ("foobar", Expression::Identifier(Ident("y".into()))),
+    ];
 
     let l = Lexer::new(input);
     let mut p = Parser::new(l);
     let program = p.parse_program().unwrap();
 
-    assert_eq!(program.statements.len(), 3);
+    assert_eq!(program.statements.len(), name_values.len());
     for (pos, st) in program.statements.iter().enumerate() {
-        assert!(check_let_statement(st, names[pos]));
+        assert!(check_let_statement(st, name_values[pos].0, &name_values[pos].1));
     }
 }
 
@@ -99,6 +107,15 @@ fn test_operator_precedence() {
         (
             "3 + 4 * 5 == 3 * 1 + 4 * 5",
             "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
+        ),
+        ("a + add(b * c) + d", "((a + add((b * c))) + d"),
+        (
+            "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
+            "add(a, b, 1, (2 * 3), (4 + 5, add(6, (7 * 8)))",
+        ),
+        (
+            "add(a + b + c * d / f + g)",
+            "add((((a + b) + ((c * d) / f)) + g))",
         ),
     ];
 

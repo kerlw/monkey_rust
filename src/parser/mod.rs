@@ -325,4 +325,28 @@ impl Parser {
 
         Ok(ret)
     }
+
+    fn parse_call_arguments(&mut self) -> Result<Vec<Expression>> {
+        let mut ret = vec![];
+
+        if self.peek_token == Token::RParen {
+            self.next_token();
+            return Ok(ret);
+        }
+
+        self.next_token();
+        ret.push(self.parse_expression(Precedence::Lowest)?);
+
+        while self.peek_token == Token::Comma {
+            self.next_token();  // comma
+            self.next_token();  // next argument
+            ret.push(self.parse_expression(Precedence::Lowest)?);
+        }
+
+        if !self.expect_peek(Token::RParen) {
+            return Err("')' expected for function call.".into());
+        }
+
+        Ok(ret)
+    }
 }
