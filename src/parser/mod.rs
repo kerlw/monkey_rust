@@ -111,19 +111,21 @@ impl Parser {
         self.next_token();
 
         let value = self.parse_expression(Precedence::Lowest)?;
+        if self.peek_token == Token::Semicolon {
+            self.next_token();
+        }
         Ok(Statement::LetStatement(identifier, value))
     }
 
     fn parse_return_statement(&mut self) -> Result<Statement> {
         self.next_token();
 
-        loop {
-            if self.cur_token == Token::Semicolon {
-                break;
-            }
+        let ret = self.parse_expression(Precedence::Lowest)?;
+        if self.cur_token == Token::Semicolon {
             self.next_token();
         }
-        todo!()
+
+        Ok(Statement::ReturnStatement(ret))
     }
 
     fn parse_expression_statement(&mut self) -> Result<Statement> {

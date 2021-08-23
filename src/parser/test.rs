@@ -1,6 +1,6 @@
 use crate::lexer::lexer::Lexer;
 use crate::lexer::token::Token;
-use crate::parser::program::{Expression, Statement, Ident};
+use crate::parser::program::{Expression, Ident, Statement};
 use crate::parser::Parser;
 
 #[cfg(test)]
@@ -59,7 +59,11 @@ fn test_let_statements() {
 
     assert_eq!(program.statements.len(), name_values.len());
     for (pos, st) in program.statements.iter().enumerate() {
-        assert!(check_let_statement(st, name_values[pos].0, &name_values[pos].1));
+        assert!(check_let_statement(
+            st,
+            name_values[pos].0,
+            &name_values[pos].1
+        ));
     }
 }
 
@@ -120,11 +124,13 @@ fn test_operator_precedence() {
     ];
 
     for (input, expect) in tests {
-        let l = Lexer::new(input);
+        let mut l = Lexer::new(input);
         let mut p = Parser::new(l);
         let program = p.parse_program().unwrap();
 
-        //TODO
+        l = Lexer::new(expect);
+        p = Parser::new(l);
+        assert_eq!(program.statements[0], p.parse_program().unwrap().statements[0]);
     }
 }
 
