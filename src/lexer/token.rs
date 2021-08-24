@@ -67,10 +67,27 @@ impl Token {
         *self == Token::EOF
     }
 
-    pub fn is_operator(&self) -> bool {
+    // pub fn is_operator(&self) -> bool {
+    //     match self {
+    //         Token::Plus | Token::Minus | Token::Asterisk | Token::Slash => true,
+    //         _ => false,
+    //     }
+    // }
+
+    pub fn to_string(&self) -> String {
         match self {
-            Token::Plus | Token::Minus | Token::Asterisk | Token::Slash => true,
-            _ => false,
+            Token::Plus => "+".to_string(),
+            Token::Minus => "-".to_string(),
+            Token::Bang => "!".to_string(),
+            Token::Asterisk => "*".to_string(),
+            Token::Slash => "/".to_string(),
+            Token::LT => "<".to_string(),
+            Token::GT => ">".to_string(),
+            Token::Comma => ",".to_string(),
+            Token::Semicolon => ";".to_string(),
+            Token::Eq => "==".to_string(),
+            Token::NotEq => "!=".to_string(),
+            _ => "".to_string(),
         }
     }
 }

@@ -112,10 +112,10 @@ fn test_operator_precedence() {
             "3 + 4 * 5 == 3 * 1 + 4 * 5",
             "((3 + (4 * 5)) == ((3 * 1) + (4 * 5)))",
         ),
-        ("a + add(b * c) + d", "((a + add((b * c))) + d"),
+        ("a + add(b * c) + d", "((a + add((b * c))) + d)"),
         (
             "add(a, b, 1, 2 * 3, 4 + 5, add(6, 7 * 8))",
-            "add(a, b, 1, (2 * 3), (4 + 5, add(6, (7 * 8)))",
+            "add(a, b, 1, (2 * 3), (4 + 5), add(6, (7 * 8)))",
         ),
         (
             "add(a + b + c * d / f + g)",
@@ -124,13 +124,11 @@ fn test_operator_precedence() {
     ];
 
     for (input, expect) in tests {
-        let mut l = Lexer::new(input);
+        let l = Lexer::new(input);
         let mut p = Parser::new(l);
         let program = p.parse_program().unwrap();
 
-        l = Lexer::new(expect);
-        p = Parser::new(l);
-        assert_eq!(program.statements[0], p.parse_program().unwrap().statements[0]);
+        assert_eq!(program.to_string(), expect);
     }
 }
 

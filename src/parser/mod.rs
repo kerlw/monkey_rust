@@ -162,14 +162,14 @@ impl Parser {
         }?;
 
         loop {
-            if self.expect_peek(Token::Semicolon)
+            if self.peek_token == Token::Semicolon
                 || precedence >= Precedence::from_token(&self.peek_token)
             {
                 break;
             }
 
             self.next_token();
-            let is_infix = match self.cur_token {
+            match self.cur_token {
                 Token::Eq
                 | Token::NotEq
                 | Token::LT
@@ -177,15 +177,10 @@ impl Parser {
                 | Token::Plus
                 | Token::Minus
                 | Token::Slash
-                | Token::Asterisk => true,
-                _ => false,
+                | Token::Asterisk => left = self.parse_infix_expression(left)?,
+                Token::LParen => left = self.parse_call_expression(left)?,
+                _ => return Ok(left),
             };
-
-            if is_infix {
-                left = self.parse_infix_expression(left)?;
-            } else {
-                return Ok(left);
-            }
         }
 
         Ok(left)
@@ -221,7 +216,8 @@ impl Parser {
         self.next_token();
 
         let right = match &token {
-            Token::Plus => self.parse_expression(precedence.sub(1))?,
+            // to make '+' right-associate
+            // Token::Plus => self.parse_expression(precedence.sub(1))?,
             _ => self.parse_expression(precedence)?,
         };
         Ok(Expression::InfixExpression(
@@ -271,7 +267,7 @@ impl Parser {
     }
 
     fn parse_block_statement(&mut self) -> Result<Vec<Statement>> {
-        self.next_token();  // LBrace
+        self.next_token(); // LBrace
 
         let mut ret = vec![];
         while self.cur_token != Token::RBrace {
@@ -328,6 +324,13 @@ impl Parser {
         Ok(ret)
     }
 
+    fn parse_call_expression(&mut self, function: Expression) -> Result<Expression> {
+        Ok(Expression::CallExpression(
+            Box::new(function),
+            self.parse_call_arguments()?,
+        ))
+    }
+
     fn parse_call_arguments(&mut self) -> Result<Vec<Expression>> {
         let mut ret = vec![];
 
@@ -340,8 +343,8 @@ impl Parser {
         ret.push(self.parse_expression(Precedence::Lowest)?);
 
         while self.peek_token == Token::Comma {
-            self.next_token();  // comma
-            self.next_token();  // next argument
+            self.next_token(); // comma
+            self.next_token(); // next argument
             ret.push(self.parse_expression(Precedence::Lowest)?);
         }
 

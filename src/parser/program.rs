@@ -10,6 +10,15 @@ pub enum Statement {
     ExpressionStatement(Expression),
 }
 
+impl Statement {
+    pub fn to_string(&self) -> String {
+        match self {
+            Statement::ExpressionStatement(expr) => expr.to_string(),
+            _ => "".to_string(),
+        }
+    }
+}
+
 // TODO 这个结构可能是多余的定义，也许可以直接使用Vec<Statement>代替，后面再确认
 #[derive(PartialEq, Debug, Clone, Eq)]
 pub struct BlockStatement {
@@ -25,10 +34,40 @@ pub enum Expression {
     IntLiteral(i64),
     BoolLiteral(bool),
     PrefixExpression(Token, Box<Expression>),
-    InfixExpression(Box<Expression>, Token, Box<Expression>),
+    InfixExpression(Box<Expression>, Token, Box<Expression>), // left, operator, right
 }
 
 impl Eq for Expression {}
+
+impl Expression {
+    pub fn to_string(&self) -> String {
+        match self {
+            Expression::Identifier(ident) => ident.0.clone(),
+            Expression::IntLiteral(v) => v.to_string(),
+            Expression::BoolLiteral(v) => v.to_string(),
+            Expression::PrefixExpression(prefix, right) => {
+                format!("({}{})", prefix.to_string(), right.to_string())
+            }
+            Expression::InfixExpression(left, operator, right) => {
+                format!(
+                    "({} {} {})",
+                    left.to_string(),
+                    operator.to_string(),
+                    right.to_string()
+                )
+            }
+            Expression::CallExpression(function, params) => {
+                let params_str = params
+                    .iter()
+                    .map(|expr| expr.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ");
+                format!("{}({})", function.to_string(), params_str)
+            }
+            _ => "".to_string(),
+        }
+    }
+}
 
 #[derive(PartialEq, PartialOrd, Debug, Eq, Clone)]
 pub enum Precedence {
@@ -44,6 +83,16 @@ pub enum Precedence {
 #[derive(Default)]
 pub struct Program {
     pub(crate) statements: Vec<Statement>,
+}
+
+impl Program {
+    pub fn to_string(&self) -> String {
+        let mut ret = String::new();
+        for st in &self.statements {
+            ret.push_str(&st.to_string());
+        }
+        return ret;
+    }
 }
 
 impl Precedence {
