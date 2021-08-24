@@ -13,7 +13,13 @@ pub enum Statement {
 impl Statement {
     pub fn to_string(&self) -> String {
         match self {
-            Statement::ExpressionStatement(expr) => expr.to_string(),
+            Statement::LetStatement(ident, expression) => {
+                format!("let {} = {};", ident.0, expression.to_string())
+            }
+            Statement::ExpressionStatement(expr) => {
+                expr.to_string()
+                // format!("{};", expr.to_string())
+            }
             _ => "".to_string(),
         }
     }

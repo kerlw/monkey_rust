@@ -63,7 +63,7 @@ impl Parser {
             self.next_token();
             true
         } else {
-            eprintln!(
+            log::debug!(
                 "{}:{} parser error: expect next token to be {:?}, got {:?} instead",
                 file!(),
                 line!(),
