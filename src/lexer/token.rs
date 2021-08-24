@@ -1,4 +1,3 @@
-#[warn(non_camel_case_types)]
 #[derive(Debug, PartialEq, Clone)]
 pub enum Token {
     Illegal,
@@ -37,6 +36,8 @@ pub enum Token {
     Int(i64),
     Float(f64),
 }
+
+impl Eq for Token {}
 
 pub const EOF_TOKEN: Token = Token::EOF;
 

@@ -38,6 +38,7 @@ pub enum Expression {
     CallExpression(Box<Expression>, Vec<Expression>),
     FunctionExpression(Vec<Ident>, Vec<Statement>),
     IntLiteral(i64),
+    FloatLiteral(f64),
     BoolLiteral(bool),
     PrefixExpression(Token, Box<Expression>),
     InfixExpression(Box<Expression>, Token, Box<Expression>), // left, operator, right

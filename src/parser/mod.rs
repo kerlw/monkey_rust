@@ -3,7 +3,7 @@ use crate::lexer::token::{Token, EOF_TOKEN};
 use crate::parser::program::{Expression, Ident, Precedence, Program, Statement};
 use std::fmt::{Debug, Display, Formatter};
 
-mod program;
+pub mod program;
 
 #[cfg(test)]
 mod test;
@@ -23,6 +23,12 @@ pub struct ParseError {
 impl From<&str> for ParseError {
     fn from(s: &str) -> Self {
         ParseError { info: s.to_owned() }
+    }
+}
+
+impl From<String> for ParseError {
+    fn from(s: String) -> Self {
+        ParseError { info: s }
     }
 }
 

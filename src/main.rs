@@ -1,11 +1,15 @@
-mod lexer;
-mod parser;
+use std::io::Write;
 
-use crate::lexer::lexer::Lexer;
-use crate::parser::Parser;
 use async_ctrlc::CtrlC;
 use async_std::prelude::*;
-use std::io::Write;
+
+use crate::eval::evaluator;
+use crate::lexer::lexer::Lexer;
+use crate::parser::Parser;
+
+mod eval;
+mod lexer;
+mod parser;
 
 const PROMPT: &str = ">>";
 
@@ -27,9 +31,13 @@ async fn main() {
 
                 let lx = Lexer::new(buf);
                 let mut p = Parser::new(lx);
-                match p.parse_program() {
-                    Ok(program) => println!("{}", program.to_string()),
-                    Err(e) => eprintln!("{:?}", e),
+                if let Err(e) = p.parse_program().and_then(|program| {
+                    evaluator::eval(&program).and_then(|obj| {
+                        println!("{:?}", obj);
+                        Ok(())
+                    })
+                }) {
+                    eprintln!("{:?}", e);
                 }
             }
         })
