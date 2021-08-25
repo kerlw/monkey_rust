@@ -158,7 +158,17 @@ impl Parser {
             }
             Token::Int(_) => self.parse_int_literal(),
             Token::Bool(_) => self.parse_bool_literal(),
-            Token::Bang | Token::Minus => self.parse_prefix_expression(),
+            Token::Bang | Token::Minus => {
+                if precedence > Precedence::Prefix {
+                    Err(format!(
+                        "'(' expected after prefix '{}'",
+                        &self.cur_token.to_string()
+                    )
+                    .into())
+                } else {
+                    self.parse_prefix_expression()
+                }
+            }
             Token::LParen => self.parse_grouped_expression(),
             Token::If => self.parse_if_expression(),
             Token::Function => self.parse_function_literal(),
@@ -210,9 +220,13 @@ impl Parser {
 
     fn parse_prefix_expression(&mut self) -> Result<Expression> {
         let token = self.cur_token.clone();
+        let precedence = match &token {
+            Token::Minus => Precedence::Prefix.add(1),
+            _ => Precedence::Prefix,
+        };
         self.next_token();
 
-        let right = self.parse_expression(Precedence::Prefix)?;
+        let right = self.parse_expression(precedence)?;
         Ok(Expression::PrefixExpression(token, Box::new(right)))
     }
 
