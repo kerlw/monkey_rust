@@ -10,7 +10,7 @@ fn test_eval(input: &str) -> Result<ObjectWrapper> {
     let mut p = Parser::new(l);
     let program = p.parse_program()?;
 
-    Ok(eval(&program))
+    eval(&program)
 }
 
 #[test]
@@ -21,7 +21,7 @@ fn test_integer_object() {
         if let ObjectWrapper::Integer(v) = obj {
             assert_eq!(v, expect);
         } else {
-
+            assert!(false);
         }
     }
 }
