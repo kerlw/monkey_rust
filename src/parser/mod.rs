@@ -127,7 +127,7 @@ impl Parser {
         self.next_token();
 
         let ret = self.parse_expression(Precedence::Lowest)?;
-        if self.cur_token == Token::Semicolon {
+        if self.peek_token == Token::Semicolon {
             self.next_token();
         }
 

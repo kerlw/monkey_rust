@@ -11,15 +11,24 @@ fn eval_statements(statements: &Vec<Statement>) -> Result<ObjectWrapper> {
     let mut ret = ObjectWrapper::Null;
     for st in statements {
         ret = eval_statement(st)?;
+        if let ObjectWrapper::ReturnValue(v) = ret {
+            return Ok(*v);
+        }
     }
     Ok(ret)
 }
 
 fn eval_statement(statement: &Statement) -> Result<ObjectWrapper> {
     match statement {
+        Statement::ReturnStatement(expr) => eval_return_statement(expr),
         Statement::ExpressionStatement(expr) => eval_expression(expr),
         _ => Ok(ObjectWrapper::Null),
     }
+}
+
+fn eval_return_statement(expression: &Expression) -> Result<ObjectWrapper> {
+    let ret = eval_expression(expression)?;
+    Ok(ObjectWrapper::ReturnValue(Box::new(ret)))
 }
 
 fn eval_expression(expression: &Expression) -> Result<ObjectWrapper> {
@@ -49,6 +58,7 @@ fn eval_infix_expression(
         Token::Plus => left.add(&right),
         Token::Eq => left.eq(&right),
         Token::NotEq => left.not_eq(&right),
+        Token::Asterisk => left.multi(&right),
         _ => Ok(ObjectWrapper::Null),
     }
 }

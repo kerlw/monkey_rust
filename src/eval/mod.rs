@@ -5,12 +5,13 @@ pub mod evaluator;
 #[cfg(test)]
 mod test;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ObjectWrapper {
     Null,
     Integer(i64),
     Float(f64),
     Boolean(bool),
+    ReturnValue(Box<ObjectWrapper>),
 }
 
 fn ensure_compare_with_same_type(one: &ObjectWrapper, two: &ObjectWrapper) -> Result<()> {
@@ -60,9 +61,7 @@ impl ObjectWrapper {
             (ObjectWrapper::Boolean(one), ObjectWrapper::Boolean(two)) => {
                 Ok(ObjectWrapper::Boolean(one == two))
             }
-            (ObjectWrapper::Null, ObjectWrapper::Null) => {
-                Ok(ObjectWrapper::Boolean(true))
-            }
+            (ObjectWrapper::Null, ObjectWrapper::Null) => Ok(ObjectWrapper::Boolean(true)),
             _ => Ok(ObjectWrapper::Boolean(false)),
         }
     }
@@ -80,10 +79,27 @@ impl ObjectWrapper {
             (ObjectWrapper::Boolean(one), ObjectWrapper::Boolean(two)) => {
                 Ok(ObjectWrapper::Boolean(one != two))
             }
-            (ObjectWrapper::Null, ObjectWrapper::Null) => {
-                Ok(ObjectWrapper::Boolean(false))
-            }
+            (ObjectWrapper::Null, ObjectWrapper::Null) => Ok(ObjectWrapper::Boolean(false)),
             _ => Ok(ObjectWrapper::Boolean(true)),
+        }
+    }
+
+    pub fn multi(&self, other: &Self) -> Result<Self> {
+        ensure_compare_with_same_type(self, other)?;
+
+        match (self, other) {
+            (ObjectWrapper::Integer(one), ObjectWrapper::Integer(two)) => {
+                Ok(ObjectWrapper::Integer(one * two))
+            }
+            (ObjectWrapper::Float(one), ObjectWrapper::Float(two)) => {
+                Ok(ObjectWrapper::Float(one * two))
+            }
+            _ => Err(format!(
+                "'*' is not support between {} and {}",
+                self.type_str(),
+                other.type_str()
+            )
+            .into()),
         }
     }
 }
