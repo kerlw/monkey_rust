@@ -18,6 +18,17 @@ fn eval_statements(statements: &Vec<Statement>) -> Result<ObjectWrapper> {
     Ok(ret)
 }
 
+fn eval_block_statements(statements: &Vec<Statement>) -> Result<ObjectWrapper> {
+    let mut ret = ObjectWrapper::Null;
+    for st in statements {
+        ret = eval_statement(st)?;
+        if let ObjectWrapper::ReturnValue(_) = ret {
+            break;
+        }
+    }
+    Ok(ret)
+}
+
 fn eval_statement(statement: &Statement) -> Result<ObjectWrapper> {
     match statement {
         Statement::ReturnStatement(expr) => eval_return_statement(expr),
@@ -57,6 +68,8 @@ fn eval_infix_expression(
     match operator {
         Token::Plus => left.add(&right),
         Token::Eq => left.eq(&right),
+        Token::GT => left.great_than(&right),
+        Token::LT => left.less_than(&right),
         Token::NotEq => left.not_eq(&right),
         Token::Asterisk => left.multi(&right),
         _ => Ok(ObjectWrapper::Null),
@@ -87,9 +100,9 @@ fn eval_if_expression(
     let cond = eval_expression(condition)?;
     if let ObjectWrapper::Boolean(v) = cond {
         if v {
-            eval_statements(consequence)
+            eval_block_statements(consequence)
         } else {
-            eval_statements(alternative)
+            eval_block_statements(alternative)
         }
     } else {
         return Err("Invalid 'if' condition.".into());

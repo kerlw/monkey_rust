@@ -102,4 +102,61 @@ impl ObjectWrapper {
             .into()),
         }
     }
+
+    pub fn divide(&self, other: &Self) -> Result<Self> {
+        ensure_compare_with_same_type(self, other)?;
+
+        match(self, other) {
+            (ObjectWrapper::Integer(one), ObjectWrapper::Integer(two)) => {
+                Ok(ObjectWrapper::Integer(one / two))
+            }
+            (ObjectWrapper::Float(one), ObjectWrapper::Float(two)) => {
+                Ok(ObjectWrapper::Float(one / two))
+            }
+            _ => Err(format!(
+                "'/' is not support between {} and {}",
+                self.type_str(),
+                other.type_str()
+            )
+                .into()),
+        }
+    }
+
+    pub fn great_than(&self, other: &Self) -> Result<Self> {
+        ensure_compare_with_same_type(self, other)?;
+
+        match(self, other) {
+            (ObjectWrapper::Integer(one), ObjectWrapper::Integer(two)) => {
+                Ok(ObjectWrapper::Boolean(one > two))
+            }
+            (ObjectWrapper::Float(one), ObjectWrapper::Float(two)) => {
+                Ok(ObjectWrapper::Boolean(one > two))
+            }
+            _ => Err(format!(
+                "'>' is not support between {} and {}",
+                self.type_str(),
+                other.type_str()
+            )
+                .into()),
+        }
+    }
+
+    pub fn less_than(&self, other: &Self) -> Result<Self> {
+        ensure_compare_with_same_type(self, other)?;
+
+        match(self, other) {
+            (ObjectWrapper::Integer(one), ObjectWrapper::Integer(two)) => {
+                Ok(ObjectWrapper::Boolean(one > two))
+            }
+            (ObjectWrapper::Float(one), ObjectWrapper::Float(two)) => {
+                Ok(ObjectWrapper::Boolean(one < two))
+            }
+            _ => Err(format!(
+                "'<' is not support between {} and {}",
+                self.type_str(),
+                other.type_str()
+            )
+                .into()),
+        }
+    }
 }

@@ -29,10 +29,11 @@ fn test_integer_object() {
 #[test]
 fn test_return_statement() {
     let cases = [
-        // ("return 10", ObjectWrapper::Integer(10)),
-        // ("return 10; 9;", ObjectWrapper::Integer(10)),
+        ("return 10", ObjectWrapper::Integer(10)),
+        ("return 10; 9;", ObjectWrapper::Integer(10)),
         ("return 2 * 5; 9", ObjectWrapper::Integer(10)),
         ("9; return 2 * 5; 9;", ObjectWrapper::Integer(10)),
+        ("if (10 > 1) { if (10 > 1) { return 10; } return 1; }", ObjectWrapper::Integer(10)),
     ];
 
     for (input, expect) in cases {
