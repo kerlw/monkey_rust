@@ -32,7 +32,7 @@ async fn main() {
                 let lx = Lexer::new(buf);
                 let mut p = Parser::new(lx);
                 if let Err(e) = p.parse_program().and_then(|program| {
-                    evaluator::eval(&program).and_then(|obj| {
+                    evaluator::Evaluator::new(&program).eval().and_then(|obj| {
                         println!("{:?}", obj);
                         Ok(())
                     })

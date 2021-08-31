@@ -2,16 +2,19 @@ use crate::parser::Result;
 use std::any::Any;
 
 pub mod evaluator;
+pub mod environment;
+
 #[cfg(test)]
 mod test;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone)]
 pub enum ObjectWrapper {
     Null,
     Integer(i64),
     Float(f64),
     Boolean(bool),
     ReturnValue(Box<ObjectWrapper>),
+    ErrorObject(String),
 }
 
 fn ensure_compare_with_same_type(one: &ObjectWrapper, two: &ObjectWrapper) -> Result<()> {

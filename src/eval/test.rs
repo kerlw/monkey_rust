@@ -1,7 +1,7 @@
+use crate::eval::evaluator::Evaluator;
 use crate::eval::ObjectWrapper;
 use crate::lexer::lexer::Lexer;
 use crate::parser::Parser;
-use crate::eval::evaluator::eval;
 use crate::parser::Result;
 
 #[cfg(test)]
@@ -9,8 +9,8 @@ fn test_eval(input: &str) -> Result<ObjectWrapper> {
     let l = Lexer::new(input);
     let mut p = Parser::new(l);
     let program = p.parse_program()?;
-
-    eval(&program)
+    let mut evaluator = Evaluator::new(&program);
+    evaluator.eval()
 }
 
 #[test]
@@ -21,7 +21,7 @@ fn test_integer_object() {
         if let ObjectWrapper::Integer(v) = obj {
             assert_eq!(v, expect);
         } else {
-            assert!(false);
+            assert!(false, "{:?} is not an integer object.", obj);
         }
     }
 }
@@ -33,11 +33,29 @@ fn test_return_statement() {
         ("return 10; 9;", ObjectWrapper::Integer(10)),
         ("return 2 * 5; 9", ObjectWrapper::Integer(10)),
         ("9; return 2 * 5; 9;", ObjectWrapper::Integer(10)),
-        ("if (10 > 1) { if (10 > 1) { return 10; } return 1; }", ObjectWrapper::Integer(10)),
+        ("let a = 5; return 2 * a; 9;", ObjectWrapper::Integer(10)),
+        (
+            "if (10 > 1) { if (10 > 1) { return 10; } return 1; }",
+            ObjectWrapper::Integer(10),
+        ),
     ];
 
     for (input, expect) in cases {
         let obj = test_eval(input).unwrap();
         assert_eq!(obj, expect);
+    }
+}
+
+#[test]
+fn test_error_handle() {
+    let cases = [("foobar", "identifier not found: foobar")];
+
+    for (input, expect) in cases {
+        let obj = test_eval(input).unwrap();
+        if let ObjectWrapper::ErrorObject(v) = obj {
+            assert_eq!(&v, expect);
+        } else {
+            assert!(false, "{:?} is not an error object.", obj);
+        }
     }
 }
