@@ -1,15 +1,16 @@
 use crate::eval::environment::Environment;
 use crate::eval::ObjectWrapper;
 use crate::lexer::token::Token;
-use crate::parser::program::{Expression, Program, Statement};
+use crate::parser::program::{Expression, Program, Statement, Ident};
 use crate::parser::Result;
 use env_logger::Env;
+use std::rc::Rc;
 
 pub struct Evaluator<'prog, 'env>
 where
     'prog: 'env,
 {
-    program: &'prog Program,
+    statements: &'prog Vec<Statement>,
     env: Environment<'env>,
 }
 
@@ -17,15 +18,19 @@ impl<'prog, 'env> Evaluator<'prog, 'env>
 where
     'prog: 'env,
 {
-    pub fn new(program: &'prog Program) -> Self {
+    pub fn new(statements: &'prog Vec<Statement>) -> Self {
         Evaluator {
-            program,
+            statements,
             env: Environment::default(),
         }
     }
 
+    pub fn with_env(statements: &'prog Vec<Statement>, env: Environment<'env>) -> Self {
+        Evaluator { statements, env }
+    }
+
     pub fn eval(&mut self) -> Result<ObjectWrapper> {
-        match self.eval_statements(&self.program.statements) {
+        match self.eval_statements(&self.statements) {
             Err(e) => Ok(ObjectWrapper::ErrorObject(e.to_string())),
             Ok(ret) => Ok(ret),
         }
@@ -42,7 +47,10 @@ where
         Ok(ret)
     }
 
-    fn eval_block_statements(&mut self, statements: &'prog Vec<Statement>) -> Result<ObjectWrapper> {
+    fn eval_block_statements(
+        &mut self,
+        statements: &'prog Vec<Statement>,
+    ) -> Result<ObjectWrapper> {
         let mut ret = ObjectWrapper::Null;
         for st in statements {
             ret = self.eval_statement(st)?;
@@ -79,7 +87,7 @@ where
                 } else {
                     Err(format!("identifier not found: {}", &ident.0).into())
                 }
-            },
+            }
             Expression::IntLiteral(v) => Ok(ObjectWrapper::Integer(v.clone())),
             Expression::BoolLiteral(v) => Ok(ObjectWrapper::Boolean(v.clone())),
             Expression::InfixExpression(left, operator, right) => {
@@ -91,6 +99,10 @@ where
             Expression::IfExpression(condition, consequence, alternative) => {
                 self.eval_if_expression(condition, consequence, alternative)
             }
+            Expression::FunctionExpression(params, body) => Ok(ObjectWrapper::FunctionObject(                Rc::new(params.clone()),
+                Rc::new(body.clone()),
+            )),
+            Expression::CallExpression(func, params) => self.eval_call_expression(func, params),
             _ => Ok(ObjectWrapper::Null),
         }
     }
@@ -151,5 +163,58 @@ where
         } else {
             return Err("Invalid 'if' condition.".into());
         }
+    }
+
+    fn eval_call_expression(
+        &mut self,
+        func: &'prog Expression,
+        params: &'prog Vec<Expression>,
+    ) -> Result<ObjectWrapper> {
+        let real_params = params
+            .iter()
+            .map(|expr| self.eval_expression(expr))
+            .collect::<Result<Vec<ObjectWrapper>>>()?;
+        match func {
+            Expression::Identifier(ident) => {
+                if let Some(ObjectWrapper::FunctionObject(params_ident, body)) =
+                    self.env.get(&ident.0)
+                {
+                    let params_ident = params_ident.clone();
+                    let body = body.clone();
+                    self.do_eval_function_call(&params_ident, &real_params, &body)
+                } else {
+                    Err(format!("function not found: {}", &ident.0).into())
+                }
+            }
+            Expression::FunctionExpression(params_ident, body) => {
+                self.do_eval_function_call(params_ident, &real_params, body)
+            }
+            _ => Err("invalid call expression.".into()),
+        }
+    }
+
+    fn do_eval_function_call(
+        &mut self,
+        params_ident: &Vec<Ident>,
+        params: &Vec<ObjectWrapper>,
+        body: &Vec<Statement>,
+    ) -> Result<ObjectWrapper> {
+        let mut env = self.env.clone();
+        if params.len() != params_ident.len() {
+            return Err(format!(
+                "Invalid params, expect {} got {}",
+                params_ident.len(),
+                params.len()
+            )
+                .into());
+        }
+        params
+            .iter()
+            .zip(params_ident.iter())
+            .for_each(|(obj, param_ident)| {
+                env.set(&param_ident.0, obj.clone());
+            });
+        let mut evaluator = Evaluator::with_env(body, env);
+        evaluator.eval()
     }
 }

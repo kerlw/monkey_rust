@@ -1,7 +1,7 @@
 use crate::eval::ObjectWrapper;
 use std::collections::HashMap;
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Environment<'a> {
     identifiers: HashMap<&'a str, ObjectWrapper>,
 }

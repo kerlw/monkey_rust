@@ -1,8 +1,11 @@
+use super::parser::program::{Expression, Ident, Statement};
+use crate::eval::environment::Environment;
 use crate::parser::Result;
 use std::any::Any;
+use std::rc::Rc;
 
-pub mod evaluator;
 pub mod environment;
+pub mod evaluator;
 
 #[cfg(test)]
 mod test;
@@ -15,6 +18,7 @@ pub enum ObjectWrapper {
     Boolean(bool),
     ReturnValue(Box<ObjectWrapper>),
     ErrorObject(String),
+    FunctionObject(Rc<Vec<Ident>>, Rc<Vec<Statement>>),
 }
 
 fn ensure_compare_with_same_type(one: &ObjectWrapper, two: &ObjectWrapper) -> Result<()> {
@@ -32,10 +36,13 @@ fn ensure_compare_with_same_type(one: &ObjectWrapper, two: &ObjectWrapper) -> Re
 impl ObjectWrapper {
     pub fn type_str(&self) -> &str {
         match self {
+            ObjectWrapper::Null => "NULL",
             ObjectWrapper::Integer(_) => "int",
             ObjectWrapper::Float(_) => "float",
             ObjectWrapper::Boolean(_) => "bool",
-            ObjectWrapper::Null => "NULL",
+            ObjectWrapper::ReturnValue(_) => "return_value",
+            ObjectWrapper::ErrorObject(_) => "error",
+            ObjectWrapper::FunctionObject(_, _) => "function",
             _ => "untyped",
         }
     }
@@ -109,7 +116,7 @@ impl ObjectWrapper {
     pub fn divide(&self, other: &Self) -> Result<Self> {
         ensure_compare_with_same_type(self, other)?;
 
-        match(self, other) {
+        match (self, other) {
             (ObjectWrapper::Integer(one), ObjectWrapper::Integer(two)) => {
                 Ok(ObjectWrapper::Integer(one / two))
             }
@@ -121,14 +128,14 @@ impl ObjectWrapper {
                 self.type_str(),
                 other.type_str()
             )
-                .into()),
+            .into()),
         }
     }
 
     pub fn great_than(&self, other: &Self) -> Result<Self> {
         ensure_compare_with_same_type(self, other)?;
 
-        match(self, other) {
+        match (self, other) {
             (ObjectWrapper::Integer(one), ObjectWrapper::Integer(two)) => {
                 Ok(ObjectWrapper::Boolean(one > two))
             }
@@ -140,14 +147,14 @@ impl ObjectWrapper {
                 self.type_str(),
                 other.type_str()
             )
-                .into()),
+            .into()),
         }
     }
 
     pub fn less_than(&self, other: &Self) -> Result<Self> {
         ensure_compare_with_same_type(self, other)?;
 
-        match(self, other) {
+        match (self, other) {
             (ObjectWrapper::Integer(one), ObjectWrapper::Integer(two)) => {
                 Ok(ObjectWrapper::Boolean(one > two))
             }
@@ -159,7 +166,7 @@ impl ObjectWrapper {
                 self.type_str(),
                 other.type_str()
             )
-                .into()),
+            .into()),
         }
     }
 }

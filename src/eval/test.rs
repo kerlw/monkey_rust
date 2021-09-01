@@ -9,7 +9,7 @@ fn test_eval(input: &str) -> Result<ObjectWrapper> {
     let l = Lexer::new(input);
     let mut p = Parser::new(l);
     let program = p.parse_program()?;
-    let mut evaluator = Evaluator::new(&program);
+    let mut evaluator = Evaluator::new(&program.statements);
     evaluator.eval()
 }
 
@@ -56,6 +56,24 @@ fn test_error_handle() {
             assert_eq!(&v, expect);
         } else {
             assert!(false, "{:?} is not an error object.", obj);
+        }
+    }
+}
+
+#[test]
+fn test_function_call() {
+    let cases = [
+        ("fn(x, y){ return x + y; }(5, 5);", 10i64),
+        ("let add = fn(x, y) { return x + y; }; add(4, 6);", 10),
+        ("let add = fn(x, y) { return x + y; }; add(add(1, 2), add(add(2, 2), add(1, 2)));", 10),
+    ];
+
+    for (input, expect) in cases {
+        let obj = test_eval(input).unwrap();
+        if let ObjectWrapper::Integer(v) = obj {
+            assert_eq!(v, expect);
+        } else {
+            assert!(false, "expect integer: {}, got {:?}", expect, obj);
         }
     }
 }
