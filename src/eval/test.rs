@@ -65,7 +65,18 @@ fn test_function_call() {
     let cases = [
         ("fn(x, y){ return x + y; }(5, 5);", 10i64),
         ("let add = fn(x, y) { return x + y; }; add(4, 6);", 10),
-        ("let add = fn(x, y) { return x + y; }; add(add(1, 2), add(add(2, 2), add(1, 2)));", 10),
+        (
+            "let add = fn(x, y) { return x + y; }; add(add(1, 2), add(add(2, 2), add(1, 2)));",
+            10,
+        ),
+        (
+            "let newAdder = fn(x) { fn(y) { x + y } };let addTwo = newAdder(3); addTwo(2);",
+            5,
+        ),
+        (
+            "let newAdder = fn(x) { let a = 5; fn(y) { a + x + y } };let addTwo = newAdder(3); addTwo(2);",
+            10,
+        ),
     ];
 
     for (input, expect) in cases {

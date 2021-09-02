@@ -1,8 +1,10 @@
-use super::parser::program::{Expression, Ident, Statement};
+use std::fmt::{Display, Formatter};
+use std::rc::Rc;
+
 use crate::eval::environment::Environment;
 use crate::parser::Result;
-use std::any::Any;
-use std::rc::Rc;
+
+use super::parser::program::{Ident, Statement};
 
 pub mod environment;
 pub mod evaluator;
@@ -18,7 +20,23 @@ pub enum ObjectWrapper {
     Boolean(bool),
     ReturnValue(Box<ObjectWrapper>),
     ErrorObject(String),
-    FunctionObject(Rc<Vec<Ident>>, Rc<Vec<Statement>>),
+    FunctionObject(Rc<Vec<Ident>>, Rc<Vec<Statement>>, Environment),
+}
+
+impl Display for ObjectWrapper {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ObjectWrapper::Null => f.write_str("Null Object"),
+            ObjectWrapper::Integer(i) => write!(f, "Integer: {}", i),
+            ObjectWrapper::Float(flt) => write!(f, "Float: {}", flt),
+            ObjectWrapper::ReturnValue(v) => write!(f, "Retrun Object: {:?}", v),
+            ObjectWrapper::ErrorObject(err) => write!(f, "Error: {}", err),
+            ObjectWrapper::FunctionObject(idents, body, _) => {
+                write!(f, "FunctionObject: ident: {:?}, body: {:?}", idents, body)
+            }
+            _ => f.write_str("unimplemented display objectWrapper"),
+        }
+    }
 }
 
 fn ensure_compare_with_same_type(one: &ObjectWrapper, two: &ObjectWrapper) -> Result<()> {
@@ -42,8 +60,8 @@ impl ObjectWrapper {
             ObjectWrapper::Boolean(_) => "bool",
             ObjectWrapper::ReturnValue(_) => "return_value",
             ObjectWrapper::ErrorObject(_) => "error",
-            ObjectWrapper::FunctionObject(_, _) => "function",
-            _ => "untyped",
+            ObjectWrapper::FunctionObject(_, _, _) => "function",
+            // _ => "untyped",
         }
     }
 

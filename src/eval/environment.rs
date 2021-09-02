@@ -1,12 +1,12 @@
 use crate::eval::ObjectWrapper;
 use std::collections::HashMap;
 
-#[derive(Default, Clone)]
-pub struct Environment<'a> {
-    identifiers: HashMap<&'a str, ObjectWrapper>,
+#[derive(Default, Clone, Debug, PartialEq)]
+pub struct Environment {
+    identifiers: HashMap<String, ObjectWrapper>,
 }
 
-impl<'a, 'b> Environment<'a> {
+impl Environment {
     pub fn contains(&self, name: &str) -> bool {
         self.identifiers.contains_key(name)
     }
@@ -19,7 +19,7 @@ impl<'a, 'b> Environment<'a> {
         self.identifiers.get_mut(name)
     }
 
-    pub fn set(&mut self, name: &'b str, obj: ObjectWrapper) -> Option<ObjectWrapper> where 'b: 'a{
-        self.identifiers.insert(name, obj)
+    pub fn set(&mut self, name: &str, obj: ObjectWrapper) -> Option<ObjectWrapper> {
+        self.identifiers.insert(name.to_string(), obj)
     }
 }
