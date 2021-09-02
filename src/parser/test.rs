@@ -1,6 +1,6 @@
 use crate::lexer::lexer::Lexer;
 use crate::lexer::token::Token;
-use crate::parser::program::{Expression, Ident, Statement};
+use crate::parser::program::{Expression, Ident, Statement, Program};
 use crate::parser::Parser;
 
 #[cfg(test)]
@@ -12,15 +12,15 @@ fn check_let_statement(st: &Statement, name_expect: &str, value_expected: &Expre
     }
 }
 
-#[cfg(test)]
-fn check_literal_expression() -> bool {
-    false
-}
-
-#[cfg(test)]
-fn check_infix_expression() -> bool {
-    false
-}
+// #[cfg(test)]
+// fn check_literal_expression() -> bool {
+//     false
+// }
+//
+// #[cfg(test)]
+// fn check_infix_expression() -> bool {
+//     false
+// }
 
 #[cfg(test)]
 fn check_function_expression(st: &Statement, expects: &Vec<&str>) -> bool {
@@ -169,4 +169,21 @@ fn test_call_expression() {
 
     assert_eq!(program.statements.len(), 1);
     println!("{:?}", program.statements[0]);
+}
+
+#[test]
+fn test_string_literal() {
+    let input = "\"hello world\";";
+
+    let l = Lexer::new(input);
+    let mut p = Parser::new(l);
+    let program = p.parse_program().unwrap();
+
+    assert_eq!(program.statements.len(), 1);
+    if let Statement::ExpressionStatement(Expression::StringLiteral(v)) = &program.statements[0] {
+        assert_eq!(v, "hello world");
+    } else {
+        assert!(false, "expect a string literal, but a {:?}", &program.statements[0]);
+    }
+
 }

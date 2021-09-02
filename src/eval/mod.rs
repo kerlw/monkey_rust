@@ -18,6 +18,7 @@ pub enum ObjectWrapper {
     Integer(i64),
     Float(f64),
     Boolean(bool),
+    String(String),
     ReturnValue(Box<ObjectWrapper>),
     ErrorObject(String),
     FunctionObject(Rc<Vec<Ident>>, Rc<Vec<Statement>>, Environment),
@@ -34,6 +35,7 @@ impl Display for ObjectWrapper {
             ObjectWrapper::FunctionObject(idents, body, _) => {
                 write!(f, "FunctionObject: ident: {:?}, body: {:?}", idents, body)
             }
+            ObjectWrapper::String(v) => write!(f, "String: {}", v),
             _ => f.write_str("unimplemented display objectWrapper"),
         }
     }
@@ -58,6 +60,7 @@ impl ObjectWrapper {
             ObjectWrapper::Integer(_) => "int",
             ObjectWrapper::Float(_) => "float",
             ObjectWrapper::Boolean(_) => "bool",
+            ObjectWrapper::String(_) => "string",
             ObjectWrapper::ReturnValue(_) => "return_value",
             ObjectWrapper::ErrorObject(_) => "error",
             ObjectWrapper::FunctionObject(_, _, _) => "function",
@@ -71,6 +74,13 @@ impl ObjectWrapper {
                 ObjectWrapper::Integer(two) => Ok(ObjectWrapper::Integer(one + two)),
                 ObjectWrapper::Float(two) => Ok(ObjectWrapper::Float((*one as f64) + two)),
                 _ => Err(format!("int cannot '+' with type {}.", other.type_str()).into()),
+            },
+            ObjectWrapper::String(one) => match other {
+                ObjectWrapper::String(two) => Ok(ObjectWrapper::String(format!("{}{}", one, two))),
+                ObjectWrapper::Integer(two) => Ok(ObjectWrapper::String(format!("{}{}", one, two))),
+                ObjectWrapper::Float(two)=> Ok(ObjectWrapper::String(format!("{}{}", one, two))),
+                ObjectWrapper::Boolean(two) => Ok(ObjectWrapper::String(format!("{}{}", one, two))),
+                _ => Err(format!("string cannot '+' with type {}.", other.type_str()).into()),
             },
             _ => Err(format!("type {} dose not support '+' operation.", self.type_str()).into()),
         }

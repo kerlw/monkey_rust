@@ -6,6 +6,8 @@ use async_std::prelude::*;
 use crate::eval::evaluator;
 use crate::lexer::lexer::Lexer;
 use crate::parser::Parser;
+use crate::eval::environment::Environment;
+use crate::eval::evaluator::Evaluator;
 
 mod eval;
 mod lexer;
@@ -22,6 +24,8 @@ async fn main() {
 
     ctrlc
         .race(async {
+            let mut env = Environment::default();
+
             loop {
                 print!("{}", PROMPT);
                 std::io::stdout().flush().unwrap();
@@ -32,8 +36,10 @@ async fn main() {
                 let lx = Lexer::new(buf);
                 let mut p = Parser::new(lx);
                 if let Err(e) = p.parse_program().and_then(|program| {
-                    evaluator::Evaluator::new(&program.statements).eval().and_then(|obj| {
+                    let mut evaluator = Evaluator::with_env(&program.statements, env.clone());
+                    evaluator.eval().and_then(|obj| {
                         println!("{:?}", obj);
+                        env = evaluator.get_env();
                         Ok(())
                     })
                 }) {

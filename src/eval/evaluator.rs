@@ -22,6 +22,10 @@ impl<'a> Evaluator<'a> {
         Evaluator { statements, env }
     }
 
+    pub fn get_env(self) -> Environment {
+        return self.env;
+    }
+
     pub fn eval(&mut self) -> Result<ObjectWrapper> {
         match self.eval_statements(&self.statements) {
             Err(e) => Ok(ObjectWrapper::ErrorObject(e.to_string())),
@@ -80,6 +84,7 @@ impl<'a> Evaluator<'a> {
             }
             Expression::IntLiteral(v) => Ok(ObjectWrapper::Integer(v.clone())),
             Expression::BoolLiteral(v) => Ok(ObjectWrapper::Boolean(v.clone())),
+            Expression::StringLiteral(v) => Ok(ObjectWrapper::String(v.clone())),
             Expression::InfixExpression(left, operator, right) => {
                 self.eval_infix_expression(left, operator, right)
             }

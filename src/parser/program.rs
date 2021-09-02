@@ -40,6 +40,7 @@ pub enum Expression {
     IntLiteral(i64),
     FloatLiteral(f64),
     BoolLiteral(bool),
+    StringLiteral(String),
     PrefixExpression(Token, Box<Expression>),
     InfixExpression(Box<Expression>, Token, Box<Expression>), // left, operator, right
 }
@@ -71,6 +72,7 @@ impl Expression {
                     .join(", ");
                 format!("{}({})", function.to_string(), params_str)
             }
+            Expression::StringLiteral(v) => v.clone(),
             _ => "".to_string(),
         }
     }

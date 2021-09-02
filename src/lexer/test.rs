@@ -134,3 +134,16 @@ fn simple_token_test() {
         assert_eq!(tk, lx.next_token());
     }
 }
+
+#[test]
+fn test_string_token() {
+    let cases = [
+        ("\"hello\"", Token::String("hello".to_string())),
+        ("\"hello \\\"world\\\"\"", Token::String("hello \\\"world\\\"".to_string())),
+    ];
+
+    for (input, expect) in cases {
+        let mut lx = Lexer::new(input);
+        assert_eq!(lx.next_token(), expect)
+    }
+}

@@ -71,6 +71,8 @@ impl Lexer {
             b']' => Token::RBracket,
             b'{' => Token::LBrace,
             b'}' => Token::RBrace,
+
+            b'"' => self.read_string(),
             0 => Token::EOF,
             _ => {
                 let ch = self.ch as char;
@@ -125,5 +127,20 @@ impl Lexer {
             return 0;
         }
         return self.input.as_bytes()[self.read_position];
+    }
+
+    fn read_string(&mut self) -> Token {
+        let pos = self.position + 1;
+        loop {
+            self.read_char();
+            if self.ch == b'\\' && self.peek_char() == b'"' {
+                self.read_char();
+            } else if self.ch == b'"' {
+                break;
+            }
+        }
+        return Token::String(
+            String::from_utf8(self.input.as_bytes()[pos..self.position].to_vec()).unwrap(),
+        );
     }
 }

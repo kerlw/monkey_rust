@@ -158,6 +158,7 @@ impl Parser {
             }
             Token::Int(_) => self.parse_int_literal(),
             Token::Bool(_) => self.parse_bool_literal(),
+            Token::String(_) => self.parse_string_literal(),
             Token::Bang | Token::Minus => {
                 if precedence > Precedence::Prefix {
                     Err(format!(
@@ -215,6 +216,14 @@ impl Parser {
             Ok(Expression::BoolLiteral(v))
         } else {
             Err("Token::Bool not found".into())
+        }
+    }
+
+    fn parse_string_literal(&self) -> Result<Expression> {
+        if let Token::String(v) = &self.cur_token {
+            Ok(Expression::StringLiteral(v.clone()))
+        } else {
+            Err("Token::String not found".into())
         }
     }
 

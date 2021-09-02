@@ -35,6 +35,7 @@ pub enum Token {
     Bool(bool), // true/false
     Int(i64),
     Float(f64),
+    String(String),
 }
 
 impl Eq for Token {}
