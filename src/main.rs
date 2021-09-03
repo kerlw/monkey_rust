@@ -3,7 +3,6 @@ use std::io::Write;
 use async_ctrlc::CtrlC;
 use async_std::prelude::*;
 
-use crate::eval::evaluator;
 use crate::lexer::lexer::Lexer;
 use crate::parser::Parser;
 use crate::eval::environment::Environment;

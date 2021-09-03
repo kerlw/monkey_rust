@@ -1,11 +1,12 @@
 use std::fmt::{Display, Formatter};
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::eval::environment::Environment;
 use crate::parser::Result;
 
 use super::parser::program::{Ident, Statement};
 
+pub mod builtins;
 pub mod environment;
 pub mod evaluator;
 
@@ -21,8 +22,11 @@ pub enum ObjectWrapper {
     String(String),
     ReturnValue(Box<ObjectWrapper>),
     ErrorObject(String),
-    FunctionObject(Rc<Vec<Ident>>, Rc<Vec<Statement>>, Environment),
+    FunctionObject(Arc<Vec<Ident>>, Arc<Vec<Statement>>, Environment),
+    BuiltinFn(usize, BuiltinFunction),
 }
+
+pub type BuiltinFunction = fn(Vec<ObjectWrapper>) -> Result<ObjectWrapper>;
 
 impl Display for ObjectWrapper {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
@@ -64,6 +68,7 @@ impl ObjectWrapper {
             ObjectWrapper::ReturnValue(_) => "return_value",
             ObjectWrapper::ErrorObject(_) => "error",
             ObjectWrapper::FunctionObject(_, _, _) => "function",
+            ObjectWrapper::BuiltinFn(_, _) => "builtin-fn"
             // _ => "untyped",
         }
     }
@@ -78,7 +83,7 @@ impl ObjectWrapper {
             ObjectWrapper::String(one) => match other {
                 ObjectWrapper::String(two) => Ok(ObjectWrapper::String(format!("{}{}", one, two))),
                 ObjectWrapper::Integer(two) => Ok(ObjectWrapper::String(format!("{}{}", one, two))),
-                ObjectWrapper::Float(two)=> Ok(ObjectWrapper::String(format!("{}{}", one, two))),
+                ObjectWrapper::Float(two) => Ok(ObjectWrapper::String(format!("{}{}", one, two))),
                 ObjectWrapper::Boolean(two) => Ok(ObjectWrapper::String(format!("{}{}", one, two))),
                 _ => Err(format!("string cannot '+' with type {}.", other.type_str()).into()),
             },

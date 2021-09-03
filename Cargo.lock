@@ -429,6 +429,7 @@ dependencies = [
  "async-ctrlc",
  "async-std",
  "env_logger",
+ "lazy_static",
  "log",
 ]
 

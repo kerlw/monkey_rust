@@ -3,7 +3,7 @@ use crate::eval::ObjectWrapper;
 use crate::lexer::token::Token;
 use crate::parser::program::{Expression, Ident, Statement};
 use crate::parser::Result;
-use std::rc::Rc;
+use std::sync::Arc;
 
 pub struct Evaluator<'a> {
     statements: &'a Vec<Statement>,
@@ -95,8 +95,8 @@ impl<'a> Evaluator<'a> {
                 self.eval_if_expression(condition, consequence, alternative)
             }
             Expression::FunctionExpression(params, body) => Ok(ObjectWrapper::FunctionObject(
-                Rc::new(params.clone()),
-                Rc::new(body.clone()),
+                Arc::new(params.clone()),
+                Arc::new(body.clone()),
                 self.env.clone(),
             )),
             Expression::CallExpression(func, params) => self.eval_call_expression(func, params),
