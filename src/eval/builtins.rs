@@ -1,6 +1,7 @@
 use crate::eval::ObjectWrapper;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
+use crate::parser::Result;
 use std::sync::{Arc, Mutex};
 
 impl Into<ObjectWrapper> for bool {
@@ -35,6 +36,16 @@ lazy_static! {
         let builtins = ret.builtins.clone();
         let mut maps = builtins.lock().unwrap();
         maps.insert("PI".to_string(), std::f64::consts::PI.into());
+
+        maps.insert("len".to_string(), ObjectWrapper::BuiltinFn(1, |args: Vec<ObjectWrapper>| -> Result<ObjectWrapper> {
+            if args.len() != 1 {
+                return Err(format!("Wrong number of arguments, expect 1 got {}", args.len()).into());
+            }
+            match &args[0] {
+                ObjectWrapper::String(v) => Ok(ObjectWrapper::Integer(v.len() as i64)),
+                _ => Err(format!("Argument to `len` not supported, got {}", args[0].type_str()).into()),
+            }
+        }));
         ret
     };
 }
