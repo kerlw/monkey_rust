@@ -88,3 +88,23 @@ fn test_function_call() {
         }
     }
 }
+
+#[test]
+fn test_builtin_functions() {
+    let cases = [
+        ("len(\"hello\");", ObjectWrapper::Integer(5)),
+        (
+            "len(10);",
+            ObjectWrapper::ErrorObject("Argument to `len` not supported, got int".to_string()),
+        ),
+        (
+            "len(10, 10);",
+            ObjectWrapper::ErrorObject("Wrong number of arguments, expect 1 got 2".to_string()),
+        ),
+    ];
+
+    for (input, expect) in cases {
+        let obj = test_eval(input).unwrap();
+        assert_eq!(obj, expect);
+    }
+}

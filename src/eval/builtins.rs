@@ -58,4 +58,25 @@ impl Builtins {
     pub fn instance_ref() -> &'static Self {
         &BUILTINS_INS
     }
+
+    pub fn contains(&self, ident: &str) -> bool {
+        self.builtins.clone().lock().unwrap().contains_key(ident)
+    }
+
+    pub fn set(&mut self, ident: &str, obj: ObjectWrapper) -> Option<ObjectWrapper> {
+        self.builtins
+            .clone()
+            .lock()
+            .unwrap()
+            .insert(ident.to_string(), obj)
+    }
+
+    pub fn get(&self, ident: &str) -> Option<ObjectWrapper> {
+        // 最后的结果如果不clone会导致无法返回，因此get_mut已经失去意义
+        self.builtins.clone().lock().unwrap().get(ident).cloned()
+    }
+
+    // pub fn get_mut(&mut self, ident: &str) -> Option<&mut ObjectWrapper> {
+    //     self.builtins.clone().lock().unwrap().get_mut(ident)
+    // }
 }

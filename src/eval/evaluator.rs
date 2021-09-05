@@ -1,3 +1,4 @@
+use crate::eval::builtins::Builtins;
 use crate::eval::environment::Environment;
 use crate::eval::ObjectWrapper;
 use crate::lexer::token::Token;
@@ -75,13 +76,7 @@ impl<'a> Evaluator<'a> {
 
     fn eval_expression(&mut self, expression: &Expression) -> Result<ObjectWrapper> {
         match expression {
-            Expression::Identifier(ident) => {
-                if self.env.contains(&ident.0) {
-                    Ok(self.env.get(&ident.0).unwrap().clone())
-                } else {
-                    Err(format!("identifier not found: {}", &ident.0).into())
-                }
-            }
+            Expression::Identifier(ident) => self.eval_identifier(&ident.0),
             Expression::IntLiteral(v) => Ok(ObjectWrapper::Integer(v.clone())),
             Expression::BoolLiteral(v) => Ok(ObjectWrapper::Boolean(v.clone())),
             Expression::StringLiteral(v) => Ok(ObjectWrapper::String(v.clone())),
@@ -101,6 +96,16 @@ impl<'a> Evaluator<'a> {
             )),
             Expression::CallExpression(func, params) => self.eval_call_expression(func, params),
             _ => Ok(ObjectWrapper::Null),
+        }
+    }
+
+    fn eval_identifier(&mut self, ident: &str) -> Result<ObjectWrapper> {
+        if self.env.contains(ident) {
+            Ok(self.env.get(ident).unwrap().clone())
+        } else if Builtins::instance_ref().contains(ident) {
+            Ok(Builtins::instance_ref().get(ident).unwrap())
+        } else {
+            Err(format!("identifier not found: {}", ident).into())
         }
     }
 
@@ -173,14 +178,26 @@ impl<'a> Evaluator<'a> {
             .collect::<Result<Vec<ObjectWrapper>>>()?;
         match func {
             Expression::Identifier(ident) => {
-                let obj = self.env.get(&ident.0);
-                if let Some(ObjectWrapper::FunctionObject(params_ident, body, env_func)) = obj {
-                    let params_ident = params_ident.clone();
-                    let body = body.clone();
-                    let env = env_func.clone();
-                    self.do_eval_function_call(&params_ident, &real_params, &body, env)
-                } else {
-                    Err(format!("function not found: {}", &ident.0).into())
+                let obj = self.eval_identifier(&ident.0)?;
+                match obj {
+                    ObjectWrapper::FunctionObject(params_ident, body, env_func) => {
+                        let params_ident = params_ident.clone();
+                        let body = body.clone();
+                        let env = env_func.clone();
+                        self.do_eval_function_call(&params_ident, &real_params, &body, env)
+                    }
+                    ObjectWrapper::BuiltinFn(nums, func) => {
+                        if real_params.len() != nums {
+                            return Err(format!(
+                                "Wrong number of arguments, expect {} got {}",
+                                nums,
+                                real_params.len()
+                            )
+                            .into());
+                        }
+                        func(real_params)
+                    }
+                    _ => Err(format!("function not found: {}", &ident.0).into()),
                 }
             }
             Expression::FunctionExpression(params_ident, body) => {
