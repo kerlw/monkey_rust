@@ -173,6 +173,7 @@ impl Parser {
             Token::LParen => self.parse_grouped_expression(),
             Token::If => self.parse_if_expression(),
             Token::Function => self.parse_function_literal(),
+            Token::LBracket => self.parse_array_literal(),
             _ => Err(format!("no prefix parse function for {:?}", self.cur_token)
                 .as_str()
                 .into()),
@@ -196,6 +197,7 @@ impl Parser {
                 | Token::Slash
                 | Token::Asterisk => left = self.parse_infix_expression(left)?,
                 Token::LParen => left = self.parse_call_expression(left)?,
+                Token::LBracket => left = self.parse_index_expression(left)?,
                 _ => return Ok(left),
             };
         }
@@ -324,6 +326,36 @@ impl Parser {
         Ok(Expression::FunctionExpression(params, sts))
     }
 
+    fn parse_array_literal(&mut self) -> Result<Expression> {
+        let elements = self.parse_expression_list(&Token::RBracket)?;
+
+        if !self.expect_peek(Token::RBracket) {
+            return Err("']' expected for array definition.".into());
+        }
+
+        Ok(Expression::ArrayLiteral(elements))
+    }
+
+    fn parse_expression_list(&mut self, end: &Token) -> Result<Vec<Expression>> {
+        let mut ret = vec![];
+
+        if self.peek_token.eq(end) {
+            self.next_token();
+            return Ok(ret);
+        }
+
+        self.next_token();
+        ret.push(self.parse_expression(Precedence::Lowest)?);
+
+        while self.peek_token.eq(&Token::Comma) {
+            self.next_token(); // comma
+            self.next_token(); // next argument
+            ret.push(self.parse_expression(Precedence::Lowest)?);
+        }
+
+        Ok(ret)
+    }
+
     fn parse_function_parameters(&mut self) -> Result<Vec<Ident>> {
         let mut ret = vec![];
         self.next_token();
@@ -361,26 +393,19 @@ impl Parser {
     }
 
     fn parse_call_arguments(&mut self) -> Result<Vec<Expression>> {
-        let mut ret = vec![];
-
-        if self.peek_token == Token::RParen {
-            self.next_token();
-            return Ok(ret);
-        }
-
-        self.next_token();
-        ret.push(self.parse_expression(Precedence::Lowest)?);
-
-        while self.peek_token == Token::Comma {
-            self.next_token(); // comma
-            self.next_token(); // next argument
-            ret.push(self.parse_expression(Precedence::Lowest)?);
-        }
+        let ret = self.parse_expression_list(&Token::RParen)?;
 
         if !self.expect_peek(Token::RParen) {
             return Err("')' expected for function call.".into());
         }
 
         Ok(ret)
+    }
+
+    fn parse_index_expression(&mut self, left: Expression) -> Result<Expression> {
+        Ok(Expression::IndexExpression(
+            Box::new(left),
+            Box::new(self.parse_expression(Precedence::Lowest)?),
+        ))
     }
 }

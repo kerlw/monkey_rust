@@ -43,6 +43,7 @@ lazy_static! {
             }
             match &args[0] {
                 ObjectWrapper::String(v) => Ok(ObjectWrapper::Integer(v.len() as i64)),
+                ObjectWrapper::Array(array) => Ok(ObjectWrapper::Integer(array.len() as i64)),
                 _ => Err(format!("Argument to `len` not supported, got {}", args[0].type_str()).into()),
             }
         }));

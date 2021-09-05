@@ -34,15 +34,34 @@ pub struct BlockStatement {
 #[derive(PartialEq, Debug, Clone)]
 pub enum Expression {
     Identifier(Ident),
-    IfExpression(Box<Expression>, Vec<Statement>, Vec<Statement>),
-    CallExpression(Box<Expression>, Vec<Expression>),
-    FunctionExpression(Vec<Ident>, Vec<Statement>),
+    IfExpression(
+        Box<Expression>, /* condition */
+        Vec<Statement>,  /* consequence */
+        Vec<Statement>,  /* alternative */
+    ),
+    CallExpression(
+        Box<Expression>, /* function */
+        Vec<Expression>, /* parameters */
+    ),
+    FunctionExpression(
+        Vec<Ident>,     /* arguments */
+        Vec<Statement>, /* body */
+    ),
     IntLiteral(i64),
     FloatLiteral(f64),
     BoolLiteral(bool),
     StringLiteral(String),
     PrefixExpression(Token, Box<Expression>),
-    InfixExpression(Box<Expression>, Token, Box<Expression>), // left, operator, right
+    InfixExpression(
+        Box<Expression>, /* left */
+        Token,           /* operator */
+        Box<Expression>, /* right */
+    ),
+    ArrayLiteral(Vec<Expression>),
+    IndexExpression(
+        Box<Expression>, /* left */
+        Box<Expression>, /* index */
+    ),
 }
 
 impl Eq for Expression {}
@@ -73,6 +92,17 @@ impl Expression {
                 format!("{}({})", function.to_string(), params_str)
             }
             Expression::StringLiteral(v) => v.clone(),
+            Expression::ArrayLiteral(array) => {
+                let array_str = array
+                    .iter()
+                    .map(|expr| expr.to_string())
+                    .collect::<Vec<String>>()
+                    .join(", ");
+                format!("[{}]", array_str)
+            }
+            Expression::IndexExpression(left, index) => {
+                format!("({}[{}])", left.to_string(), index.to_string())
+            }
             _ => "".to_string(),
         }
     }
@@ -87,6 +117,7 @@ pub enum Precedence {
     Product,     // *
     Prefix,      // -x or !x
     Call,        // my_func(x)
+    Index,       // array[index]
 }
 
 #[derive(Default)]
@@ -112,6 +143,7 @@ impl Precedence {
             Token::Plus | Token::Minus => Precedence::Sum,
             Token::Slash | Token::Asterisk => Precedence::Product,
             Token::LParen => Precedence::Call,
+            Token::LBracket => Precedence::Index,
             _ => Precedence::Lowest,
         }
     }
@@ -126,6 +158,7 @@ impl Precedence {
             Precedence::Product => 4,
             Precedence::Prefix => 5,
             Precedence::Call => 6,
+            Precedence::Index => 7,
         }
     }
 
@@ -138,6 +171,7 @@ impl Precedence {
             4 => Precedence::Product,
             5 => Precedence::Prefix,
             6 => Precedence::Call,
+            7 => Precedence::Index,
             _ => Precedence::Lowest,
         }
     }

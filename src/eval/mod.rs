@@ -20,6 +20,7 @@ pub enum ObjectWrapper {
     Float(f64),
     Boolean(bool),
     String(String),
+    Array(Vec<ObjectWrapper>),
     ReturnValue(Box<ObjectWrapper>),
     ErrorObject(String),
     FunctionObject(Arc<Vec<Ident>>, Arc<Vec<Statement>>, Environment),
@@ -68,7 +69,8 @@ impl ObjectWrapper {
             ObjectWrapper::ReturnValue(_) => "return_value",
             ObjectWrapper::ErrorObject(_) => "error",
             ObjectWrapper::FunctionObject(_, _, _) => "function",
-            ObjectWrapper::BuiltinFn(_, _) => "builtin-fn"
+            ObjectWrapper::BuiltinFn(_, _) => "builtin-fn",
+            ObjectWrapper::Array(_) => "array",
             // _ => "untyped",
         }
     }
