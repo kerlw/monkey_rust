@@ -41,6 +41,7 @@ impl Display for ObjectWrapper {
                 write!(f, "FunctionObject: ident: {:?}, body: {:?}", idents, body)
             }
             ObjectWrapper::String(v) => write!(f, "String: {}", v),
+            ObjectWrapper::Array(array) => write!(f, "Array: {:?}", array),
             _ => f.write_str("unimplemented display objectWrapper"),
         }
     }
@@ -198,6 +199,25 @@ impl ObjectWrapper {
             }
             _ => Err(format!(
                 "'<' is not support between {} and {}",
+                self.type_str(),
+                other.type_str()
+            )
+            .into()),
+        }
+    }
+
+    pub fn index(&self, other: &Self) -> Result<Self> {
+        match (self, other) {
+            (ObjectWrapper::Array(array), ObjectWrapper::Integer(index)) => {
+                let index = *index as usize;
+                if index >= array.len() {
+                    Err(format!("Index out of range. expect [0, {}), got {}", array.len(), index).into())
+                } else {
+                    Ok(array[index].clone())
+                }
+            }
+            _ => Err(format!(
+                "index operation is not supported for type {} with index type: {}",
                 self.type_str(),
                 other.type_str()
             )

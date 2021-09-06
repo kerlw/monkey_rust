@@ -95,6 +95,18 @@ impl<'a> Evaluator<'a> {
                 self.env.clone(),
             )),
             Expression::CallExpression(func, params) => self.eval_call_expression(func, params),
+            Expression::ArrayLiteral(array) => {
+                let elements = array
+                    .iter()
+                    .map(|expr| self.eval_expression(expr))
+                    .collect::<Result<Vec<ObjectWrapper>>>()?;
+                Ok(ObjectWrapper::Array(elements))
+            }
+            Expression::IndexExpression(array, index) => {
+                let array = self.eval_expression(array)?;
+                let index = self.eval_expression(index)?;
+                array.index(&index)
+            },
             _ => Ok(ObjectWrapper::Null),
         }
     }
