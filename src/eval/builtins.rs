@@ -1,7 +1,7 @@
 use crate::eval::ObjectWrapper;
+use crate::parser::Result;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
-use crate::parser::Result;
 use std::sync::{Arc, Mutex};
 
 impl Into<ObjectWrapper> for bool {
@@ -37,16 +37,105 @@ lazy_static! {
         let mut maps = builtins.lock().unwrap();
         maps.insert("PI".to_string(), std::f64::consts::PI.into());
 
-        maps.insert("len".to_string(), ObjectWrapper::BuiltinFn(1, |args: Vec<ObjectWrapper>| -> Result<ObjectWrapper> {
-            if args.len() != 1 {
-                return Err(format!("Wrong number of arguments, expect 1 got {}", args.len()).into());
-            }
-            match &args[0] {
-                ObjectWrapper::String(v) => Ok(ObjectWrapper::Integer(v.len() as i64)),
-                ObjectWrapper::Array(array) => Ok(ObjectWrapper::Integer(array.len() as i64)),
-                _ => Err(format!("Argument to `len` not supported, got {}", args[0].type_str()).into()),
-            }
-        }));
+        maps.insert(
+            "len".to_string(),
+            ObjectWrapper::BuiltinFn(1, |args: Vec<ObjectWrapper>| -> Result<ObjectWrapper> {
+                if args.len() != 1 {
+                    return Err(
+                        format!("Wrong number of arguments, expect 1 got {}", args.len()).into(),
+                    );
+                }
+                match &args[0] {
+                    ObjectWrapper::String(v) => Ok(ObjectWrapper::Integer(v.len() as i64)),
+                    ObjectWrapper::Array(array) => Ok(ObjectWrapper::Integer(array.len() as i64)),
+                    _ => Err(format!(
+                        "Argument to `len` not supported, got {}",
+                        args[0].type_str()
+                    )
+                    .into()),
+                }
+            }),
+        );
+
+        maps.insert(
+            "first".to_string(),
+            ObjectWrapper::BuiltinFn(1, |args: Vec<ObjectWrapper>| -> Result<ObjectWrapper> {
+                if args.len() != 1 {
+                    return Err(
+                        format!("Wrong number of arguments, expect 1 got {}", args.len()).into(),
+                    );
+                }
+
+                if let ObjectWrapper::Array(array) = &args[0] {
+                    if array.len() > 0 {
+                        Ok(array[0].clone())
+                    } else {
+                        Ok(ObjectWrapper::Null)
+                    }
+                } else {
+                    return Err(format!(
+                        "Argument to 'first' must be ARRAY, got {:?}",
+                        args[0].type_str()
+                    )
+                    .into());
+                }
+            }),
+        );
+
+        maps.insert(
+            "last".to_string(),
+            ObjectWrapper::BuiltinFn(1, |args: Vec<ObjectWrapper>| -> Result<ObjectWrapper> {
+                if args.len() != 1 {
+                    return Err(
+                        format!("Wrong number of arguments, expect 1 got {}", args.len()).into(),
+                    );
+                }
+
+                if let ObjectWrapper::Array(array) = &args[0] {
+                    if array.len() > 0 {
+                        Ok(array[array.len() - 1].clone())
+                    } else {
+                        Ok(ObjectWrapper::Null)
+                    }
+                } else {
+                    return Err(format!(
+                        "Argument to 'last' must be ARRAY, got {:?}",
+                        args[0].type_str()
+                    )
+                    .into());
+                }
+            }),
+        );
+
+        maps.insert(
+            "rest".to_string(),
+            ObjectWrapper::BuiltinFn(1, |args: Vec<ObjectWrapper>| -> Result<ObjectWrapper> {
+                if args.len() != 1 {
+                    return Err(
+                        format!("Wrong number of arguments, expect 1 got {}", args.len()).into(),
+                    );
+                }
+
+                if let ObjectWrapper::Array(array) = &args[0] {
+                    if array.len() > 0 {
+                        Ok(ObjectWrapper::Array(
+                            array[0..array.len() - 1]
+                                .iter()
+                                .map(|ele| ele.clone())
+                                .collect(),
+                        ))
+                    } else {
+                        Ok(ObjectWrapper::Null)
+                    }
+                } else {
+                    return Err(format!(
+                        "Argument to 'rest' must be ARRAY, got {:?}",
+                        args[0].type_str()
+                    )
+                    .into());
+                }
+            }),
+        );
         ret
     };
 }
