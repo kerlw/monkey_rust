@@ -211,7 +211,12 @@ impl ObjectWrapper {
             (ObjectWrapper::Array(array), ObjectWrapper::Integer(index)) => {
                 let index = *index as usize;
                 if index >= array.len() {
-                    Err(format!("Index out of range. expect [0, {}), got {}", array.len(), index).into())
+                    Err(format!(
+                        "Index out of range. expect [0, {}), got {}",
+                        array.len(),
+                        index
+                    )
+                    .into())
                 } else {
                     Ok(array[index].clone())
                 }

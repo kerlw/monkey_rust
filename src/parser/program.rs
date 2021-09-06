@@ -134,15 +134,15 @@ pub struct Program {
     pub(crate) statements: Vec<Statement>,
 }
 
-// impl Program {
-//     pub fn to_string(&self) -> String {
-//         let mut ret = String::new();
-//         for st in &self.statements {
-//             ret.push_str(&st.to_string());
-//         }
-//         return ret;
-//     }
-// }
+impl Program {
+    pub fn to_string(&self) -> String {
+        let mut ret = String::new();
+        for st in &self.statements {
+            ret.push_str(&st.to_string());
+        }
+        return ret;
+    }
+}
 
 impl Precedence {
     pub fn from_token(token: &Token) -> Self {

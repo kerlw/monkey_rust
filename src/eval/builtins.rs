@@ -153,13 +153,13 @@ impl Builtins {
         self.builtins.clone().lock().unwrap().contains_key(ident)
     }
 
-    pub fn set(&mut self, ident: &str, obj: ObjectWrapper) -> Option<ObjectWrapper> {
-        self.builtins
-            .clone()
-            .lock()
-            .unwrap()
-            .insert(ident.to_string(), obj)
-    }
+    // pub fn set(&mut self, ident: &str, obj: ObjectWrapper) -> Option<ObjectWrapper> {
+    //     self.builtins
+    //         .clone()
+    //         .lock()
+    //         .unwrap()
+    //         .insert(ident.to_string(), obj)
+    // }
 
     pub fn get(&self, ident: &str) -> Option<ObjectWrapper> {
         // 最后的结果如果不clone会导致无法返回，因此get_mut已经失去意义

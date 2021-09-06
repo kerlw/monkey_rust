@@ -1,6 +1,6 @@
 use crate::lexer::lexer::Lexer;
 use crate::lexer::token::Token;
-use crate::parser::program::{Expression, Ident, Program, Statement};
+use crate::parser::program::{Expression, Ident, Statement};
 use crate::parser::Parser;
 
 #[cfg(test)]
