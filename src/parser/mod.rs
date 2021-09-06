@@ -151,6 +151,7 @@ impl Parser {
     }
 
     fn parse_expression(&mut self, precedence: Precedence) -> Result<Expression> {
+        // prefix
         let mut left = match &self.cur_token {
             Token::Ident(_) => {
                 let ident = self.parse_identifier()?;
@@ -174,11 +175,13 @@ impl Parser {
             Token::If => self.parse_if_expression(),
             Token::Function => self.parse_function_literal(),
             Token::LBracket => self.parse_array_literal(),
+            Token::LBrace => self.parse_hash_literal(),
             _ => Err(format!("no prefix parse function for {:?}", self.cur_token)
                 .as_str()
                 .into()),
         }?;
 
+        // infix
         loop {
             if self.peek_token == Token::Semicolon
                 || precedence >= Precedence::from_token(&self.peek_token)
@@ -334,6 +337,32 @@ impl Parser {
         }
 
         Ok(Expression::ArrayLiteral(elements))
+    }
+
+    fn parse_hash_literal(&mut self) -> Result<Expression> {
+        let mut ret: Vec<(Expression, Expression)> = Default::default();
+        while self.peek_token != Token::RBrace {
+            self.next_token();
+            let key = self.parse_expression(Precedence::Lowest)?;
+
+            if !self.expect_peek(Token::Colon) {
+                return Err("':' expected in Hash element.".into());
+            }
+
+            self.next_token();
+            let value = self.parse_expression(Precedence::Lowest)?;
+            ret.push((key, value));
+
+            if self.peek_token != Token::RBrace && self.peek_token != Token::Comma {
+                return Err("'}' or ',' expected in Hash element.".into());
+            }
+        }
+
+        if !self.expect_peek(Token::RBrace) {
+            return Err("'}' expected for Hash end.".into());
+        }
+
+        Ok(Expression::HashLiteral(ret))
     }
 
     fn parse_expression_list(&mut self, end: &Token) -> Result<Vec<Expression>> {

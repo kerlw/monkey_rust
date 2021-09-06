@@ -21,6 +21,7 @@ pub enum Token {
     GT,        // >
     Comma,     // ,
     Semicolon, // ;
+    Colon,     // :
     Eq,        // ==
     NotEq,     // !=
 
@@ -86,6 +87,7 @@ impl Token {
             Token::LT => "<".to_string(),
             Token::GT => ">".to_string(),
             Token::Comma => ",".to_string(),
+            Token::Colon => ":".to_string(),
             Token::Semicolon => ";".to_string(),
             Token::Eq => "==".to_string(),
             Token::NotEq => "!=".to_string(),

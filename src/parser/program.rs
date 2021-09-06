@@ -62,6 +62,7 @@ pub enum Expression {
         Box<Expression>, /* left */
         Box<Expression>, /* index */
     ),
+    HashLiteral(Vec<(Expression, Expression)>),
 }
 
 impl Eq for Expression {}
@@ -103,6 +104,14 @@ impl Expression {
             Expression::IndexExpression(left, index) => {
                 format!("({}[{}])", left.to_string(), index.to_string())
             }
+            Expression::HashLiteral(list) => {
+                let map_str = list
+                    .iter()
+                    .map(|(left, right)| format!("{}: {}", left.to_string(), right.to_string()))
+                    .collect::<Vec<String>>()
+                    .join(", ");
+                format!("{{{}}}", map_str)
+            }
             _ => "".to_string(),
         }
     }
@@ -125,15 +134,15 @@ pub struct Program {
     pub(crate) statements: Vec<Statement>,
 }
 
-impl Program {
-    pub fn to_string(&self) -> String {
-        let mut ret = String::new();
-        for st in &self.statements {
-            ret.push_str(&st.to_string());
-        }
-        return ret;
-    }
-}
+// impl Program {
+//     pub fn to_string(&self) -> String {
+//         let mut ret = String::new();
+//         for st in &self.statements {
+//             ret.push_str(&st.to_string());
+//         }
+//         return ret;
+//     }
+// }
 
 impl Precedence {
     pub fn from_token(token: &Token) -> Self {
