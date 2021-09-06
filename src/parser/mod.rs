@@ -403,9 +403,12 @@ impl Parser {
     }
 
     fn parse_index_expression(&mut self, left: Expression) -> Result<Expression> {
-        Ok(Expression::IndexExpression(
-            Box::new(left),
-            Box::new(self.parse_expression(Precedence::Lowest)?),
-        ))
+        self.next_token();
+        let index = self.parse_expression(Precedence::Lowest)?;
+
+        if !self.expect_peek(Token::RBracket) {
+            return Err("']' expected for index end.".into());
+        }
+        Ok(Expression::IndexExpression(Box::new(left), Box::new(index)))
     }
 }

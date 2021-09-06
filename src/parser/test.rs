@@ -1,6 +1,6 @@
 use crate::lexer::lexer::Lexer;
 use crate::lexer::token::Token;
-use crate::parser::program::{Expression, Ident, Statement, Program};
+use crate::parser::program::{Expression, Ident, Program, Statement};
 use crate::parser::Parser;
 
 #[cfg(test)]
@@ -121,6 +121,14 @@ fn test_operator_precedence() {
             "add(a + b + c * d / f + g)",
             "add((((a + b) + ((c * d) / f)) + g))",
         ),
+        (
+            "a * [1, 2, 3, 4][b * c] * d",
+            "((a * ([1, 2, 3, 4][(b * c)])) * d)",
+        ),
+        (
+            "add(a * b[2], b[1], 2 * [1, 2][1])",
+            "add((a * (b[2])), (b[1]), (2 * ([1, 2][1])))",
+        ),
     ];
 
     for (input, expect) in tests {
@@ -183,7 +191,10 @@ fn test_string_literal() {
     if let Statement::ExpressionStatement(Expression::StringLiteral(v)) = &program.statements[0] {
         assert_eq!(v, "hello world");
     } else {
-        assert!(false, "expect a string literal, but a {:?}", &program.statements[0]);
+        assert!(
+            false,
+            "expect a string literal, but a {:?}",
+            &program.statements[0]
+        );
     }
-
 }
